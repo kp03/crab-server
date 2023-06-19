@@ -1,0 +1,109 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Customer {
+  id                String @id @default(uuid())
+  name              String?
+  email             String @unique
+  rating            Rating[]  
+  trip              Trip[]  
+  password          String
+  phone             String @unique
+  isVip             Boolean
+  created_at        DateTime @default(now())
+  updated_at        DateTime @updatedAt  
+}
+
+model Rating {
+  id                String @id @default(uuid())
+  feedback          String
+  rating            Int
+  customer          Customer? @relation(fields: [customerID], references: [id])
+  customerID        String? @unique
+  driver            Driver? @relation(fields: [driverID], references: [id])
+  driverID          String? @unique
+  trip              Trip? @relation(fields: [tripID], references: [id])
+  tripID            String? @unique
+}
+
+model Trip {
+  id                String @id @default(uuid())
+  status            String
+  source            String
+  destination       String
+  date              DateTime
+  customer          Customer? @relation(fields: [customerID], references: [id])
+  customerID        String? @unique
+  rating            Rating?
+  driver            Driver? @relation(fields: [driverID], references: [id])
+  driverID          String? @unique
+  payment           Payment? @relation(fields: [paymentID], references: [id])
+  paymentID         String? @unique
+}
+
+model Payment {
+  id                String @id @default(uuid())
+  method            String
+  amount            Float
+  trip              Trip?
+  tripID            String? @unique
+  created_at        DateTime @default(now())
+  updated_at        DateTime @updatedAt
+}
+
+model Driver {
+  id                String @id @default(uuid())
+  cab               Cab?  @relation(fields: [cabID], references: [id])
+  cabID             String? @unique
+  driverLocation    DriverLocation? @relation(fields: [driverLocationID], references: [id])
+  driverLocationID  String? @unique
+  rating            Rating[]
+  trip              Trip[]
+  name              String?
+  email             String @unique
+  password          String
+  phone             String @unique
+  vehicleType       String
+  vehicleName       String
+  created_at        DateTime @default(now())
+  updated_at        DateTime @updatedAt
+}
+
+model DriverLocation {
+  id                String @id @default(uuid())
+  oldLatitude       String
+  oldLongtitude     String
+  newLatitude       String
+  newLongtitude     String
+  driver            Driver?
+  created_at        DateTime @default(now())
+  updated_at        DateTime @updatedAt
+}
+
+model Cab{
+  id                String @id @default(uuid())
+  type              String
+  regNo             String
+  driver            Driver?
+  created_at        DateTime @default(now())
+  updated_at        DateTime @updatedAt
+}
+
+model Caller {
+  id                String @id @default(uuid())
+  source            String
+  destination       String
+  phone             String
+  customerName      String
+  password          String  
+  customerID        String 
+}
