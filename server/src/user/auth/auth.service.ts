@@ -53,7 +53,7 @@ export class AuthService {
             }
         });
         const message: String = "Customer Account Created!";
-        return message;
+        console.log(message);        
     }
 
     
@@ -61,7 +61,7 @@ export class AuthService {
         if (!email && !phone) {
             throw new Error('Email or phone number must be provided');
         }
-        
+
         let user;
         if (email){
             user = await this.prismaService.customer.findFirst({
@@ -88,7 +88,7 @@ export class AuthService {
             throw new HttpException("Invalid Credentials", 400);
         }
         const message: String = "Customer Login Success!";
-        return message;
+        return user;
 
     }    
 }

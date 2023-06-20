@@ -1,7 +1,8 @@
-import { Controller, Post, Body } from '@nestjs/common';
+import { Controller, Post, Body, Put } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { SignInDto, SignUpDto } from '../dtos/auth.dto';
-
+import { ApiTags } from '@nestjs/swagger';
+@ApiTags('Customers') // Add this decorator to group endpoints under the 'users' tag
 
 @Controller('auth')
 export class AuthController {
@@ -16,4 +17,5 @@ export class AuthController {
     signIn(@Body() body: SignInDto){
         return this.authService.signIn(body);
     }
+    
 }
