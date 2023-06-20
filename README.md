@@ -119,3 +119,34 @@ npx prisma db push
 ```bash
 npx prisma studio 
 ```
+
+
+### Writing APIs guide
+1. create a new module
+```bash
+nest g module user
+```
+2. create a controller
+```bash
+nest g controller auth
+```
+3. generate a service inside user auth
+```bash
+nest g service auth user
+```
+4. in the controller, create a service constructor:
+```typescript
+constructor(private readonly authService: AuthService){}
+```
+5. Then define the end-points like this:
+```typescript
+@Post('/signup')
+signUp(){
+return this.authService.signUp()
+}
+```
+6. install class-validator and class-transformer to create DTOs for service endpoints
+```bash
+npm install class-validator class-transformer
+```
+7. create a dtos folder and a dto file ```auth.dto.ts```
