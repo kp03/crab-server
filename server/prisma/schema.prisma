@@ -1,6 +1,5 @@
 // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -10,25 +9,49 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Customer {
+// Entity for Riders
+model Rider {
   id                String @id @default(uuid())
-  name              String?
+  first_name        String
+  last_name         String
+  gender            String
   email             String @unique
-  rating            Rating[]  
   trip              Trip[]  
-  password          String
   phone             String @unique
-  isVip             Boolean
+  password          String
+  rating            Rating[]  
+  isVip             Boolean @default(false)
   created_at        DateTime @default(now())
   updated_at        DateTime @updatedAt  
 }
 
+// Entity for Drivers
+model Driver {
+  id                String @id @default(uuid())
+  first_name        String
+  last_name         String
+  gender            String
+  email             String @unique
+  phone             String @unique
+  password          String
+  cab               Cab?  @relation(fields: [cabID], references: [id])
+  cabID             String? @unique
+  driverLocation    DriverLocation? @relation(fields: [driverLocationID], references: [id])
+  driverLocationID  String? @unique
+  rating            Rating[]
+  trip              Trip[]
+  vehicleType       String
+  vehicleName       String
+  created_at        DateTime @default(now())
+  updated_at        DateTime @updatedAt
+}
+
 model Rating {
   id                String @id @default(uuid())
-  feedback          String
+  feedback          String?
   rating            Int
-  customer          Customer? @relation(fields: [customerID], references: [id])
-  customerID        String? @unique
+  rider             Rider? @relation(fields: [riderID], references: [id])
+  riderID           String? @unique
   driver            Driver? @relation(fields: [driverID], references: [id])
   driverID          String? @unique
   trip              Trip? @relation(fields: [tripID], references: [id])
@@ -41,11 +64,13 @@ model Trip {
   source            String
   destination       String
   date              DateTime
-  customer          Customer? @relation(fields: [customerID], references: [id])
-  customerID        String? @unique
+  rider             Rider? @relation(fields: [riderID], references: [id])
+  riderID           String? @unique
   rating            Rating?
   driver            Driver? @relation(fields: [driverID], references: [id])
   driverID          String? @unique
+  trip_length       Float?
+  tri_cost          Float?
   payment           Payment? @relation(fields: [paymentID], references: [id])
   paymentID         String? @unique
 }
@@ -60,23 +85,7 @@ model Payment {
   updated_at        DateTime @updatedAt
 }
 
-model Driver {
-  id                String @id @default(uuid())
-  cab               Cab?  @relation(fields: [cabID], references: [id])
-  cabID             String? @unique
-  driverLocation    DriverLocation? @relation(fields: [driverLocationID], references: [id])
-  driverLocationID  String? @unique
-  rating            Rating[]
-  trip              Trip[]
-  name              String?
-  email             String @unique
-  password          String
-  phone             String @unique
-  vehicleType       String
-  vehicleName       String
-  created_at        DateTime @default(now())
-  updated_at        DateTime @updatedAt
-}
+
 
 model DriverLocation {
   id                String @id @default(uuid())
@@ -93,6 +102,7 @@ model Cab{
   id                String @id @default(uuid())
   type              String
   regNo             String
+  seats             Int
   driver            Driver?
   created_at        DateTime @default(now())
   updated_at        DateTime @updatedAt
@@ -100,10 +110,20 @@ model Cab{
 
 model Caller {
   id                String @id @default(uuid())
-  source            String
-  destination       String
-  phone             String
-  customerName      String
+  first_name        String
+  last_name         String
+  gender            String
   password          String  
-  customerID        String 
+  created_at        DateTime @default(now())
+  updated_at        DateTime @updatedAt
+}
+
+model Admin {
+  id                String @id @default(uuid())
+  first_name        String
+  last_name         String
+  gender            String
+  password          String
+  created_at        DateTime @default(now())
+  updated_at        DateTime @updatedAt
 }

@@ -1,21 +1,24 @@
-import { Controller, Post, Body, Put } from '@nestjs/common';
+import { Controller, Post, Body, Put, HttpCode, HttpStatus } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { SignInDto, SignUpDto } from '../dtos/auth.dto';
-import { ApiTags } from '@nestjs/swagger';
-@ApiTags('Customers') // Add this decorator to group endpoints under the 'users' tag
+import { ApiConsumes, ApiCreatedResponse, ApiTags } from '@nestjs/swagger';
 
-@Controller('auth')
+ // Add this decorator to group endpoints under the 'users' tag
+@ApiTags('users')
+@Controller('/user/auth')
 export class AuthController {
     constructor(private readonly authService: AuthService){}
-
-    @Post('/signup')
-    signUp(@Body() body: SignUpDto){        
-        return this.authService.signUp(body);
+        
+    @Post('/register')    
+    @HttpCode(HttpStatus.CREATED)
+    register(@Body() body: SignUpDto){        
+        return this.authService.register(body);
     }
 
-    @Post('/signin')
-    signIn(@Body() body: SignInDto){
-        return this.authService.signIn(body);
+    @Post('/login')
+    @HttpCode(200)
+    login(@Body() body: SignInDto){
+        return this.authService.login(body);
     }
     
 }

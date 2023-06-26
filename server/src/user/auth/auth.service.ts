@@ -1,11 +1,14 @@
 import { ConflictException, HttpException, Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import * as bcrypt from "bcryptjs"
+import { first } from 'rxjs';
 
 interface SignupParams {
     email: string;
-    password: string;
-    name: string;
+    first_name: string;
+    last_name: string;
+    gender: string;
+    password: string;    
     phone: string;
 }
 
@@ -19,58 +22,60 @@ interface SigninParams {
 export class AuthService {
     constructor (private readonly prismaService: PrismaService) {}
 
-    async signUp({email, phone, password, name}: SignupParams) {
+    async register({email, phone, password, first_name, last_name, gender}: SignupParams) {
 
         // Find if phone or email has been taken
-        const customerExists = await this.prismaService.customer.findFirst({
+        const riderExists = await this.prismaService.rider.findFirst({
             where: {
                 OR :[  { email: email },
                        { phone: phone }]
             }
         });
 
-        console.log({customerExists});
-        if (customerExists){
-            if (customerExists.email === email) {
+        console.log({riderExists});
+        if (riderExists){
+            if (riderExists.email === email) {
                 console.log('Email already exists');
             }
 
-            if (customerExists.phone === phone) {
+            if (riderExists.phone === phone) {
                 console.log('Phone already exists');                
             }
 
             throw new ConflictException();
         }
 
-        const hashedPassword = await bcrypt.hash(password, 10);
-        const user = await this.prismaService.customer.create({
+        const hashedPassword = await bcrypt.hash(password, 10);        
+        const user = await this.prismaService.rider.create({            
             data: {
                 email,
-                name,
+                first_name,
+                last_name,
+                gender,
                 phone,
                 isVip: false,
                 password: hashedPassword
             }
         });
-        const message: String = "Customer Account Created!";
+        const message: String = "Rider Account Created!";
         console.log(message);        
     }
 
     
-    async signIn({phone, email, password} : SigninParams){
+    async login({phone, email, password} : SigninParams){
         if (!email && !phone) {
             throw new Error('Email or phone number must be provided');
         }
 
         let user;
         if (email){
-            user = await this.prismaService.customer.findFirst({
+            user = await this.prismaService.rider.findFirst({
                 where: {
                     email: email
                 }
             });
         } else if (phone) {
-            user = await this.prismaService.customer.findFirst({
+            user = await this.prismaService.rider.findFirst({
                 where: {
                     phone: phone
                 }
