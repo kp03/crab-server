@@ -21,6 +21,7 @@ model Rider {
   password          String
   rating            Rating[]  
   isVip             Boolean @default(false)
+  refresh_token     String?
   created_at        DateTime @default(now())
   updated_at        DateTime @updatedAt  
 }
@@ -40,8 +41,9 @@ model Driver {
   driverLocationID  String? @unique
   rating            Rating[]
   trip              Trip[]
-  vehicleType       String
-  vehicleName       String
+  refresh_token     String?
+  vehicleType       String?
+  vehicleName       String?
   created_at        DateTime @default(now())
   updated_at        DateTime @updatedAt
 }
@@ -113,7 +115,10 @@ model Caller {
   first_name        String
   last_name         String
   gender            String
+  email             String @unique
+  phone             String @unique
   password          String  
+  refresh_token     String?
   created_at        DateTime @default(now())
   updated_at        DateTime @updatedAt
 }
@@ -122,8 +127,11 @@ model Admin {
   id                String @id @default(uuid())
   first_name        String
   last_name         String
+  email             String @unique
+  phone             String @unique
   gender            String
   password          String
+  refresh_token     String?
   created_at        DateTime @default(now())
   updated_at        DateTime @updatedAt
 }
