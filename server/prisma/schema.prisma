@@ -12,9 +12,9 @@ datasource db {
 // Entity for Riders
 model Rider {
   id                String @id @default(uuid())
-  first_name        String
-  last_name         String
-  gender            String
+  first_name        String?
+  last_name         String?
+  gender            String?
   email             String @unique
   trip              Trip[]  
   phone             String @unique
@@ -29,9 +29,9 @@ model Rider {
 // Entity for Drivers
 model Driver {
   id                String @id @default(uuid())
-  first_name        String
-  last_name         String
-  gender            String
+  first_name        String?
+  last_name         String?
+  gender            String?
   email             String @unique
   phone             String @unique
   password          String
@@ -112,9 +112,9 @@ model Cab{
 
 model Caller {
   id                String @id @default(uuid())
-  first_name        String
-  last_name         String
-  gender            String
+  first_name        String?
+  last_name         String?
+  gender            String?
   email             String @unique
   phone             String @unique
   password          String  
@@ -125,11 +125,11 @@ model Caller {
 
 model Admin {
   id                String @id @default(uuid())
-  first_name        String
-  last_name         String
+  first_name        String?
+  last_name         String?
   email             String @unique
   phone             String @unique
-  gender            String
+  gender            String?
   password          String
   refresh_token     String?
   created_at        DateTime @default(now())
