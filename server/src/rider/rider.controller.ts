@@ -1,34 +1,19 @@
-import { Body, Controller, HttpCode, HttpStatus, Logger, Post } from '@nestjs/common';
-import { ApiConsumes, ApiCreatedResponse, ApiInternalServerErrorResponse, ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { Body, Controller, Post } from '@nestjs/common';
 import { RiderService } from './rider.service';
-import { findRiderDto, riderSignupDto } from './dto/rider-request.dto';
-import { riderSignupResponseDto } from './dto/rider-response.dto';
+import { RiderRegisterDto } from './dto/rider.register.dto';
+import { RiderLoginDto } from './dto/rider.login.dto';
 
 @Controller('rider')
-@ApiTags('rider')
 export class RiderController {
-    constructor
-        (
-            private readonly riderService: RiderService,
-        ) { }
+    constructor(private riderService: RiderService) { }
 
-    @HttpCode(HttpStatus.CREATED)
-    @ApiCreatedResponse({
-        // respone dto type
-        type: riderSignupResponseDto,
-        description: 'Rider successfully created!'
-    })
-    @ApiOkResponse({ type: riderSignupResponseDto, description: '' })
-    @ApiOperation({ description: "rider create api" })
-    @ApiConsumes("APPLICATION/JSON")
-    @Post('')
-    public async CreateRider(@Body() body: riderSignupDto) {
-        try {
-            console.log(JSON.stringify(body));
-            return await this.riderService.create(body);
-        } catch (err) {
-            throw err;
-        }
+    @Post('/auth/register')
+    register(@Body() riderRegisterDto: RiderRegisterDto): Promise<{ token: string }> {
+        return this.riderService.register(riderRegisterDto);
     }
 
+    @Post('/auth/login')
+    login(@Body() riderLoginDto: RiderLoginDto): Promise<{ token: string }> {
+        return this.riderService.login(riderLoginDto);
+    }
 }
