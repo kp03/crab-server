@@ -4,13 +4,14 @@ import * as bcrypt from "bcryptjs"
 import { JwtService } from '@nestjs/jwt';
 import { RiderRegisterDto } from './dto/rider.register.dto';
 import { RiderLoginDto } from './dto/rider.login.dto';
+import { Rider } from '@prisma/client';
 
 @Injectable()
 export class RiderService {
     constructor
         (
             private readonly prismaService: PrismaService,
-            private jwtSerivce: JwtService
+            private jwtService: JwtService
         ) { }
 
     async register(registerDto: RiderRegisterDto): Promise<{ token: string }> {
@@ -55,7 +56,7 @@ export class RiderService {
 
         const message: string = `${rider} created!`;
         console.log(rider);
-        const token = this.jwtSerivce.sign({ id: rider.id });
+        const token = this.jwtService.sign({ id: rider.id });
         return { token }
     }
 
@@ -94,8 +95,21 @@ export class RiderService {
         console.log("Rider successfully login!");
         console.log(rider);
         
-        const token = this.jwtSerivce.sign({ id: rider.id });
+        const token = this.jwtService.sign({ id: rider.id });
         return { token }
+    }
+
+    async getUserProfileById(id: string, token: string): Promise<Rider | null> {
+
+        try {
+            const decoded = this.jwtService.verify(token);
+            if (decoded.id !== id) {
+                throw new UnauthorizedException("Invalid Token!");
+            }
+        } catch (err){
+            throw new UnauthorizedException("Invalid token!");
+        }
+        return this.prismaService.rider.findUnique({ where: { id } });
     }
 
 

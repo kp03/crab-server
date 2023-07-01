@@ -1,7 +1,9 @@
-import { Body, Controller, Post } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Req, UseGuards } from '@nestjs/common';
 import { RiderService } from './rider.service';
 import { RiderRegisterDto } from './dto/rider.register.dto';
 import { RiderLoginDto } from './dto/rider.login.dto';
+import { AuthGuard } from '@nestjs/passport';
+import { Rider } from '@prisma/client';
 
 @Controller('rider')
 export class RiderController {
@@ -15,5 +17,14 @@ export class RiderController {
     @Post('/auth/login')
     login(@Body() riderLoginDto: RiderLoginDto): Promise<{ token: string }> {
         return this.riderService.login(riderLoginDto);
+    }
+
+
+    @Get('/me/:id')    
+    @UseGuards(AuthGuard('jwt'))
+    async getUserProfile(@Param('id') id: string, @Req() req): Promise<Rider | null> {
+        const token = req.headers.authorization?.split(' ')[1];
+        console.log(token);
+        return this.riderService.getUserProfileById(id, token);
     }
 }

@@ -3,6 +3,7 @@ import { AdminService } from './admin.service';
 import { ApiBody, ApiOkResponse, ApiParam, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { createAdminDto } from './dtos/create-admin-dto';
 import { Admin } from '@prisma/client';
+import { AdminLoginDto } from './dtos/admin.login.dto';
 
 
 interface SignupParams {
@@ -46,5 +47,10 @@ export class AdminController {
     @Delete('id')
     async deleteAdmin(id: string) {
         return await this.adminService.delete(id);
+    }
+
+    @Post('/auth/login')
+    login(@Body() adminLoginDto: AdminLoginDto): Promise<{ token: string }> {
+        return this.adminService.login(adminLoginDto);
     }
 }
