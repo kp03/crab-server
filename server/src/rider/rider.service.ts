@@ -100,15 +100,6 @@ export class RiderService {
     }
 
     async getUserProfileById(id: string, token: string): Promise<Rider | null> {
-
-        try {
-            const decoded = this.jwtService.verify(token);
-            if (decoded.id !== id) {
-                throw new UnauthorizedException("Invalid Token!");
-            }
-        } catch (err){
-            throw new UnauthorizedException("Invalid token!");
-        }
         return this.prismaService.rider.findUnique({ where: { id } });
     }
 

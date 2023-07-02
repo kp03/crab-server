@@ -5,6 +5,7 @@ import { RiderController } from './rider.controller';
 import { RiderService } from './rider.service';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { PassportModule } from '@nestjs/passport';
+import { AdminAuthGuard, RiderAuthGuard, RoleAuthGuard } from 'src/auth/role.auth.guard';
 
 @Module({
   imports: [    
@@ -21,7 +22,7 @@ import { PassportModule } from '@nestjs/passport';
     }),
   ],
   controllers: [RiderController],
-  providers: [RiderService, PrismaService],
+  providers: [RiderService, PrismaService, AdminAuthGuard, RoleAuthGuard, RiderAuthGuard],
   exports: [],
 })
 export class RiderModule {}

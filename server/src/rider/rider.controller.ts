@@ -4,6 +4,8 @@ import { RiderRegisterDto } from './dto/rider.register.dto';
 import { RiderLoginDto } from './dto/rider.login.dto';
 import { AuthGuard } from '@nestjs/passport';
 import { Rider } from '@prisma/client';
+import { AdminAuthGuard, RiderAuthGuard, RoleAuthGuard } from 'src/auth/role.auth.guard';
+
 
 @Controller('rider')
 export class RiderController {
@@ -20,11 +22,12 @@ export class RiderController {
     }
 
 
-    @Get('/me/:id')    
-    @UseGuards(AuthGuard('jwt'))
+    @Get('/me/:id')
+    @UseGuards(AuthGuard('jwt'), RoleAuthGuard)         
     async getUserProfile(@Param('id') id: string, @Req() req): Promise<Rider | null> {
         const token = req.headers.authorization?.split(' ')[1];
         console.log(token);
         return this.riderService.getUserProfileById(id, token);
     }
 }
+
