@@ -17,4 +17,4 @@ import { AdminAuthGuard, RiderAuthGuard, RoleAuthGuard } from './role.auth.guard
   providers: [AuthService, PrismaService, JwtStrategy, AdminAuthGuard, RoleAuthGuard, RiderAuthGuard],
   exports: [AuthService, AdminAuthGuard, RoleAuthGuard, RiderAuthGuard]
 })
-export class AuthModule {}
+export class AuthModule { }

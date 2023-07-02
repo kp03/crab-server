@@ -18,7 +18,7 @@ model Rider {
   email             String @unique
   trip              Trip[]  
   phone             String @unique
-  password          String
+  password          String?
   rating            Rating[]  
   isVip             Boolean @default(false)
   refresh_token     String?
