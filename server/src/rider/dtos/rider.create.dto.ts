@@ -20,6 +20,10 @@ export class RiderCreateDto {
     })
     phone: string;
 
+    @ApiProperty({ example: 'Khang Pham' })
+    @IsNotEmpty()    
+    name: string;
+
     // @ApiProperty({example: "password"})
     // @IsString()
     // @MinLength(5)

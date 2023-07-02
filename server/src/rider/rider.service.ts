@@ -38,13 +38,13 @@ export class RiderService {
     async create(createDto: RiderCreateDto): Promise<Rider | null> {
 
         // const { id, email, phone, password } = registerDto;
-        const { id, email, phone } = createDto;
+        const { id, email, phone, name } = createDto;
         const riderExists = await this.prismaService.rider.findFirst({
             where: {
                 OR: [
                     { email: email },
                     { phone: phone },
-                    { id: id },
+                    { id: id },                    
                 ]
             }
         });
@@ -71,6 +71,7 @@ export class RiderService {
                 id,
                 email,
                 phone,
+                name
                 // password: hashedPassword
             }
         });
