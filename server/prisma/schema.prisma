@@ -18,6 +18,7 @@ model Rider {
   trip              Trip[]  
   phone             String @unique
   password          String?
+  avatar            String?
   rating            Rating[]  
   isVip             Boolean @default(false)
   refresh_token     String?
@@ -28,14 +29,18 @@ model Rider {
 // Entity for Drivers
 model Driver {
   id                String @id @default(uuid())
-  first_name        String?
-  last_name         String?
+  name              String?
   gender            String?
   email             String @unique
   phone             String @unique
   password          String
-  cab               Cab?  @relation(fields: [cabID], references: [id])
-  cabID             String? @unique
+  avatar            String?
+  cabName           String?
+  cabType           String?
+  regNo             String?
+  cabSeats          Int?
+  // cab               Cab?  @relation(fields: [cabID], references: [id])
+  // cabID             String? @unique
   driverLocation    DriverLocation? @relation(fields: [driverLocationID], references: [id])
   driverLocationID  String? @unique
   rating            Rating[]
@@ -99,15 +104,15 @@ model DriverLocation {
   updated_at        DateTime @updatedAt
 }
 
-model Cab{
-  id                String @id @default(uuid())
-  type              String
-  regNo             String
-  seats             Int
-  driver            Driver?
-  created_at        DateTime @default(now())
-  updated_at        DateTime @updatedAt
-}
+// model Cab{
+//   id                String @id @default(uuid())
+//   type              String
+//   regNo             String
+//   seats             Int
+//   driver            Driver?
+//   created_at        DateTime @default(now())
+//   updated_at        DateTime @updatedAt
+// }
 
 model Caller {
   id                String @id @default(uuid())
@@ -124,11 +129,10 @@ model Caller {
 
 model Admin {
   id                String @id @default(uuid())
-  first_name        String?
-  last_name         String?
+  name              String?
   email             String @unique
   phone             String @unique
-  gender            String?
+  // gender            String?
   password          String
   refresh_token     String?
   created_at        DateTime @default(now())

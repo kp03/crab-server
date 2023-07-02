@@ -1,42 +1,115 @@
-import { BadRequestException, HttpException, Injectable, UnauthorizedException } from '@nestjs/common';
+import { BadRequestException, ConflictException, HttpException, Injectable, NotFoundException, UnauthorizedException, UseGuards } from '@nestjs/common';
 import { Admin } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 import * as bcrypt from 'bcryptjs';
-import { createAdminParams } from './admin-interface';
 import { AdminLoginDto } from './dtos/admin.login.dto';
 import { JwtService } from '@nestjs/jwt';
+import { AdminCreateDto } from './dtos/admin.create.dto';
+import { AdminUpdateDto } from './dtos/admin.update.dto';
 
 @Injectable()
 export class AdminService {
     constructor(private readonly prismaService: PrismaService, private readonly jwtService: JwtService) { }
 
-    async findAll(): Promise<Admin[]> {
+
+    async getAllAdmin(): Promise<Admin[]> {
         return this.prismaService.admin.findMany();
     }
 
-    async findById(id: string): Promise<Admin | null> {
-        return this.prismaService.admin.findUnique({ where: { id } });
-    }
-
-    async create(data: createAdminParams): Promise<Admin> {
-        const { email, phone } = data;
-        const userExists = await this.prismaService.admin.findFirst({
-            where: {
-                OR: [{ email }, { phone }],
-            },
+    async getAdminById(id: string): Promise<Admin | null> {
+        const admin = await this.prismaService.admin.findUnique({
+            where: { id },
         });
-        const hashedPassword = await bcrypt.hash(data.password, 10);
-        data.password = hashedPassword;
-        return this.prismaService.admin.create({ data });
+
+        if (!admin) {
+            throw new NotFoundException('Admin not found');
+        }
+        return await this.prismaService.admin.findUnique({ where: { id } });
     }
 
-    async update(id: string, data): Promise<Admin | null> {
-        const userExist = await this.prismaService.admin.findUnique({ where: { id } });
-        return this.prismaService.admin.update({ where: { id }, data });
+    async createAnAdmin(createDto: AdminCreateDto): Promise<Admin | null> {
+
+        const { email, phone, password, name } = createDto;
+        const adminExists = await this.prismaService.admin.findFirst({
+            where: {
+                OR: [
+                    { email: email },
+                    { phone: phone },
+                ]
+            }
+        });
+
+        if (adminExists) {
+            if (adminExists.email === email) {
+                console.log('Email already exists');
+                throw new ConflictException('Email already exists!');
+            }
+            if (adminExists.phone === phone) {
+                console.log('Phone already exists');
+                throw new ConflictException('Phone already exists!');
+            }
+        }
+
+        const hashedPassword = await bcrypt.hash(password, 10);
+        const admin = await this.prismaService.admin.create({
+            data: {
+
+                email,
+                phone,
+                name,
+                password: hashedPassword
+            }
+        });
+
+        const message: string = `${admin} created!`;
+        console.log(admin);
+        return admin;
     }
 
-    async delete(id: string): Promise<Admin | null> {
-        return this.prismaService.admin.delete({ where: { id } });
+    async updateAnAdmin(id: string, data: AdminUpdateDto): Promise<Admin | null> {
+        const adminExists = await this.prismaService.admin.findUnique({ where: { id } });
+        if (!adminExists) {
+            throw new NotFoundException('Admin not found');
+        }
+
+        const { email, phone, password, name } = data;
+
+        const existedEmail = await this.prismaService.admin.findFirst({where: {email}});
+        const existedPhone = await this.prismaService.admin.findFirst({where: {phone}});
+
+        if (existedEmail) {
+            console.log('Email already exists');
+            throw new ConflictException('Email already in use!');
+        }
+
+        if (existedPhone) {
+            console.log('Phone already exists');
+            throw new ConflictException('Phone already in use!');
+        }
+        const hashedPassword = await bcrypt.hash(password, 10);
+        return await this.prismaService.admin.update({
+            where: { id }, data: {
+                email,
+                phone,
+                password: hashedPassword,
+                name,
+                updated_at: {set: new Date()},
+            }
+        });
+    }
+
+    async deleteAnAdmin(id: string): Promise<void> {
+        const admin = await this.prismaService.admin.findUnique({
+            where: { id },
+        });
+
+        if (!admin) {
+            throw new NotFoundException('Admin not found');
+        }
+
+        await this.prismaService.admin.delete({
+            where: { id },
+        });
     }
 
     async login(adminLoginDto: AdminLoginDto): Promise<{ token: string }> {
@@ -73,8 +146,8 @@ export class AdminService {
 
         console.log("admin successfully login!");
         console.log(admin);
-        
         const token = this.jwtService.sign({ id: admin.id });
         return { token }
     }
+
 }

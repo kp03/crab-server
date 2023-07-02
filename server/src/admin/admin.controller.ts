@@ -1,20 +1,12 @@
-import { Body, Controller, Delete, Get, Post, Put } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Header, NotFoundException, Param, Post, Put, UseGuards } from '@nestjs/common';
 import { AdminService } from './admin.service';
-import { ApiBody, ApiOkResponse, ApiParam, ApiQuery, ApiTags } from '@nestjs/swagger';
-import { createAdminDto } from './dtos/create-admin-dto';
-import { Admin } from '@prisma/client';
+import { ApiBearerAuth, ApiBody, ApiHeader, ApiOkResponse, ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { AdminLoginDto } from './dtos/admin.login.dto';
+import { AuthGuard } from '@nestjs/passport';
+import { AdminAuthGuard } from 'src/auth/role.auth.guard';
+import { AdminCreateDto } from './dtos/admin.create.dto';
+import { AdminUpdateDto } from './dtos/admin.update.dto';
 
-
-interface SignupParams {
-    email: string;
-    first_name: string;
-    last_name: string;
-    gender: string;
-    password: string;
-    phone: string;
-    userType: string; // Add userType property
-}
 
 @ApiTags('admin') // Add ApiTags decorator
 @Controller('admin')
@@ -22,35 +14,63 @@ export class AdminController {
     constructor(private adminService: AdminService) { }
 
 
-    @Get()    
+    // GET ALL ADMIN
+    @ApiBearerAuth()
+    @Header('Authorization', 'Bearer {{token}}')
+    @UseGuards(AuthGuard('jwt'), AdminAuthGuard)
+    @ApiOperation({ summary: "Get all admin" })
+    @Get()
     async getAllAdmin() {
-        return await this.adminService.findAll();
+        return await this.adminService.getAllAdmin();
     }
 
+    // GET ADMIN BY ID
+    @ApiOperation({ summary: "Find an admin by ID" })
+    @ApiResponse({ status: 201, description: "Admin found!" })
     @ApiParam({ name: 'id', type: 'string' })
     @Get(':id')
-    async getAdminById(id: string) {
-        return await this.adminService.findById(id);
+    async getAdminById(@Param('id') id: string) {
+        return await this.adminService.getAdminById(id);
     }
 
+    // CREATE NEW ADMIN
+    @ApiOperation({ summary: "Create a new admin" })
+    @ApiBody({ type: AdminCreateDto })
     @Post()
-    @ApiBody({ type: createAdminDto })
-    async create(@Body() body: SignupParams) {
-        return await this.adminService.create(body);
+    async createAnAdmin(@Body() adminCreateDto: AdminCreateDto) {
+        return await this.adminService.createAnAdmin(adminCreateDto);
     }
 
-    @Put()
-    async updateAdmin(id: string, data) {
-        return await this.adminService.update(id, data);
+    // UPDATE AN ADMIN
+    @ApiOperation({ summary: "Update an admin" })
+    @ApiBody({ type: AdminUpdateDto })
+    @Put(':id')
+    async updateAnAdmin(@Param('id') id: string, @Body() adminUpdateDto: AdminUpdateDto) {
+        return await this.adminService.updateAnAdmin(id, adminUpdateDto);
     }
 
-    @Delete('id')
-    async deleteAdmin(id: string) {
-        return await this.adminService.delete(id);
+    // DELETE AN ADMIN
+    @ApiOperation({ summary: "Delete an admin by ID" })
+    @ApiParam({ name: 'id', type: 'string' })
+    @Delete(':id')
+    async deleteAnAdmin(@Param('id') id: string): Promise<void> {
+        try {
+            await this.adminService.deleteAnAdmin(id);
+        } catch (error) {
+            if (error instanceof NotFoundException) {
+                throw new NotFoundException('Admin not found');
+            }
+            throw error;
+        }
     }
 
-    @Post('/auth/login')
-    login(@Body() adminLoginDto: AdminLoginDto): Promise<{ token: string }> {
+    // LOGIN AS ADMIN
+    @ApiOperation({ summary: "Login as an admin" })
+    @ApiBody({ type: AdminLoginDto })
+    @Post('/login')
+    async login(@Body() adminLoginDto: AdminLoginDto): Promise<{ token: string }> {
         return this.adminService.login(adminLoginDto);
     }
+
+
 }

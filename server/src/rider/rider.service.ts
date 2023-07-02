@@ -1,20 +1,16 @@
 import { ConflictException, HttpException, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
-import * as bcrypt from "bcryptjs"
 import { JwtService } from '@nestjs/jwt';
 import { RiderCreateDto } from './dtos/rider.create.dto';
-import { RiderLoginDto } from './dtos/rider.login.dto';
 import { Rider } from '@prisma/client';
 import { FindARiderDto } from './dtos/find.rider.dto';
 
 @Injectable()
 export class RiderService {
-    constructor
-        (
-            private readonly prismaService: PrismaService,
-            private jwtService: JwtService
-        ) { }
+    constructor(private readonly prismaService: PrismaService) { }
 
+
+    // Service to find a rider by either id or phone
     async findRider(riderData: FindARiderDto): Promise<Rider | null> {
 
         const { id, phone } = riderData;
@@ -35,16 +31,16 @@ export class RiderService {
         }
     }
 
+    // Service to create a new rider in database
     async create(createDto: RiderCreateDto): Promise<Rider | null> {
-
-        // const { id, email, phone, password } = registerDto;
+        
         const { id, email, phone, name } = createDto;
         const riderExists = await this.prismaService.rider.findFirst({
             where: {
                 OR: [
                     { email: email },
                     { phone: phone },
-                    { id: id },                    
+                    { id: id },
                 ]
             }
         });
@@ -71,8 +67,7 @@ export class RiderService {
                 id,
                 email,
                 phone,
-                name
-                // password: hashedPassword
+                name               
             }
         });
 
@@ -124,8 +119,5 @@ export class RiderService {
     // async getUserProfileById(id: string, token: string): Promise<Rider | null> {
     //     return this.prismaService.rider.findUnique({ where: { id } });
     // }
-
-
-
 
 }

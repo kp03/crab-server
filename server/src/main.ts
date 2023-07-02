@@ -9,6 +9,7 @@ async function bootstrap() {
   const config = new DocumentBuilder()
   .setTitle('Crab Server')
   .setDescription('Crab Server APIs')
+  .addBearerAuth()
   .setVersion('1.0')
   .build();
 
@@ -25,7 +26,7 @@ async function bootstrap() {
     })
   );
 
-  await app.listen(3000);
+  await app.listen(4000);
   
 }
 bootstrap();
