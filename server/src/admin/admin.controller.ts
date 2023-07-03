@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Header, NotFoundException, Param, Post, Put, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Header, NotFoundException, Param, Post, Put, Request, UploadedFile, UseGuards, UseInterceptors } from '@nestjs/common';
 import { AdminService } from './admin.service';
 import { ApiBearerAuth, ApiBody, ApiHeader, ApiOkResponse, ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { AdminLoginDto } from './dtos/admin.login.dto';
@@ -6,7 +6,23 @@ import { AuthGuard } from '@nestjs/passport';
 import { AdminAuthGuard } from 'src/auth/role.auth.guard';
 import { AdminCreateDto } from './dtos/admin.create.dto';
 import { AdminUpdateDto } from './dtos/admin.update.dto';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { diskStorage } from 'multer'
+import { v4 as uuidv4 } from 'uuid'
+import * as path from 'path';
+import { Admin } from '@prisma/client';
 
+
+export const storage = {
+    storage: diskStorage({
+        destination: './uploads/riders/profileimages',
+        filename: (req, file, cb) => {
+            const fileName: string = path.parse(file.originalname).name.replace(/\s/g, '') + uuidv4();
+            const extension: string = path.parse(file.originalname).ext;
+            cb(null, `${fileName}${extension}`);
+        }
+    })
+}
 
 @ApiTags('admin') // Add ApiTags decorator
 @Controller('admin')
@@ -72,5 +88,14 @@ export class AdminController {
         return this.adminService.login(adminLoginDto);
     }
 
+
+
+    @Post('upload')
+    @UseInterceptors(FileInterceptor('file', storage))
+    @UseGuards(AuthGuard('jwt'), AdminAuthGuard)
+    uploadFile(@UploadedFile() file, @Request() req): { imagePath: string } {        
+        console.log(file);
+        return { imagePath: file.filename };
+    }
 
 }

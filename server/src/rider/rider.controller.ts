@@ -1,20 +1,33 @@
-import { Body, Controller, Delete, Get, Header, Param, Post, Put, Query, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Header, Param, Post, Put, Query, Req, UploadedFile, UseGuards, UseInterceptors } from '@nestjs/common';
 import { RiderService } from './rider.service';
 import { RiderCreateDto } from './dtos/rider.create.dto';
-import { RiderLoginDto } from './dtos/rider.login.dto';
 import { AuthGuard } from '@nestjs/passport';
 import { Rider } from '@prisma/client';
-import { AdminAuthGuard, RiderAuthGuard, RoleAuthGuard } from 'src/auth/role.auth.guard';
+import { AdminAuthGuard } from 'src/auth/role.auth.guard';
 import { ApiBearerAuth, ApiBody, ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { FindARiderDto } from './dtos/find.rider.dto';
 import { RiderUpdateDto } from './dtos/rider.update.dto';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { diskStorage } from 'multer'
+import { v4 as uuidv4 } from 'uuid'
+import * as path from 'path';
+
+export const storage = {
+    storage: diskStorage({
+        destination: './uploads/riders/profileimages',
+        filename: (req, file, cb) => {
+            const fileName: string = path.parse(file.originalname).name.replace(/\s/g, '') + uuidv4();
+            const extension: string = path.parse(file.originalname).ext;
+            cb(null, `${fileName}${extension}`);
+        }
+    })
+}
+
 
 @ApiTags('rider') // Add ApiTags decorator
 @Controller('rider')
 export class RiderController {
     constructor(private riderService: RiderService) { }
-
-
 
     @ApiOperation({ summary: "Find all rider" })
     @ApiResponse({ status: 200, description: "Rider Found!" })
@@ -65,7 +78,12 @@ export class RiderController {
         return await this.riderService.deleteRiderById(id);
     }
 
-
-
+    @Post('upload')
+    @UseInterceptors(FileInterceptor('file', storage))
+    uploadFile(@UploadedFile() file): { imagePath: string } {
+        
+        console.log(file);
+        return { imagePath: file.filename };
+    }
 }
 
