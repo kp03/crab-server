@@ -74,8 +74,8 @@ export class AdminService {
 
         const { email, phone, password, name } = data;
 
-        const existedEmail = await this.prismaService.admin.findFirst({where: {email}});
-        const existedPhone = await this.prismaService.admin.findFirst({where: {phone}});
+        const existedEmail = await this.prismaService.admin.findFirst({ where: { email } });
+        const existedPhone = await this.prismaService.admin.findFirst({ where: { phone } });
 
         if (existedEmail) {
             console.log('Email already exists');
@@ -93,7 +93,7 @@ export class AdminService {
                 phone,
                 password: hashedPassword,
                 name,
-                updated_at: {set: new Date()},
+                updated_at: { set: new Date() },
             }
         });
     }

@@ -1,14 +1,18 @@
 import { ConflictException, HttpException, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { JwtService } from '@nestjs/jwt';
 import { RiderCreateDto } from './dtos/rider.create.dto';
 import { Rider } from '@prisma/client';
 import { FindARiderDto } from './dtos/find.rider.dto';
-
+import { RiderUpdateDto } from './dtos/rider.update.dto';
+import * as bcrypt from 'bcryptjs'
 @Injectable()
 export class RiderService {
     constructor(private readonly prismaService: PrismaService) { }
 
+
+    async getAllRider(): Promise<Rider[]> {
+        return this.prismaService.rider.findMany();
+    }
 
     // Service to find a rider by either id or phone
     async findRider(riderData: FindARiderDto): Promise<Rider | null> {
@@ -33,7 +37,7 @@ export class RiderService {
 
     // Service to create a new rider in database
     async create(createDto: RiderCreateDto): Promise<Rider | null> {
-        
+
         const { id, email, phone, name } = createDto;
         const riderExists = await this.prismaService.rider.findFirst({
             where: {
@@ -67,7 +71,7 @@ export class RiderService {
                 id,
                 email,
                 phone,
-                name               
+                name
             }
         });
 
@@ -77,47 +81,47 @@ export class RiderService {
         return rider;
     }
 
-    // async login(riderLoginDto: RiderLoginDto): Promise<{ token: string }> {
-    //     const { email, phone, password } = riderLoginDto;
-    //     if (!email && !phone) {
-    //         throw new Error("Email or phone number must be provided!");
-    //     }
 
-    //     let rider;
-    //     if (email) {
-    //         rider = await this.prismaService.rider.findFirst({
-    //             where: {
-    //                 email: email
-    //             }
-    //         });
-    //     } else if (phone) {
-    //         rider = await this.prismaService.rider.findFirst({
-    //             where: {
-    //                 phone: phone
-    //             }
-    //         });
-    //     }
 
-    //     if (!rider) {
-    //         throw new UnauthorizedException("Invalid credentials!");
-    //     }
-    //     const hashedPassword = rider.password;
-    //     const isValidPassword = await bcrypt.compare(password, hashedPassword);
+    async getRiderProfileById(id: string): Promise<Rider | null> {
+        const rider = await this.prismaService.rider.findUnique({
+            where: { id },
+        });
+        if (!rider) {
+            throw new NotFoundException("Rider not found!");
+        }
+        return await this.prismaService.rider.findUnique({ where: { id } });
+    }
 
-    //     if (!isValidPassword) {
-    //         console.log("Invalid Password!");
-    //         throw new HttpException("Invalid credentials!", 400);
-    //     }
+    async updateRiderProfileById(id: string, data: RiderUpdateDto): Promise<Rider | null> {
+        const rider = await this.prismaService.rider.findUnique({
+            where: { id },
+        });
+        if (!rider) {
+            throw new NotFoundException("Rider not found!");
+        }
+        const { email, phone, password, name } = data;
 
-    //     console.log("Rider successfully login!");
-    //     console.log(rider);
+        const hashedPassword = await bcrypt.hash(password, 10);
+        return await this.prismaService.rider.update({
+            where: { id }, data: {
+                email,
+                phone,
+                password: hashedPassword,
+                name,
+                updated_at: { set: new Date() }
+            }
+        });
+    }
 
-    //     const token = this.jwtService.sign({ id: rider.id });
-    //     return { token }
-    // }
-
-    // async getUserProfileById(id: string, token: string): Promise<Rider | null> {
-    //     return this.prismaService.rider.findUnique({ where: { id } });
-    // }
+    async deleteRiderById(id: string): Promise<void> {
+        const rider = await this.prismaService.rider.findUnique({
+            where: { id },
+        });
+        if (!rider) {
+            throw new NotFoundException("Rider not found!");
+        }
+        await this.prismaService.rider.delete({ where: { id } });
+    }
 
 }
