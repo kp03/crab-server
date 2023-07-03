@@ -6,7 +6,7 @@ import { AdminLoginDto } from './dtos/admin.login.dto';
 import { JwtService } from '@nestjs/jwt';
 import { AdminCreateDto } from './dtos/admin.create.dto';
 import { AdminUpdateDto } from './dtos/admin.update.dto';
-
+import { File } from 'multer';
 @Injectable()
 export class AdminService {
     constructor(private readonly prismaService: PrismaService, private readonly jwtService: JwtService) { }
@@ -150,4 +150,17 @@ export class AdminService {
         return { token }
     }
 
+    async addAdminProfilePicture(id: string, imagePath: string): Promise<Admin | null> {
+        const admin = await this.prismaService.admin.findUnique({ where: { id: id } });
+        if (!admin) {
+            throw new NotFoundException("Admin not found!");
+        }
+
+        const updatedAdmin = await this.prismaService.admin.update({
+            where: { id: id },
+            data: { avatar: imagePath }
+        });
+
+        return updatedAdmin;
+    }
 }

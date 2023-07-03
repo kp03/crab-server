@@ -3,7 +3,7 @@ import { PassportStrategy } from '@nestjs/passport';
 import { Strategy, ExtractJwt } from 'passport-jwt';
 import { AuthService } from './auth.service';
 
-@Injectable()
+// @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
   constructor(private authService: AuthService) {
     super({
@@ -12,10 +12,10 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     });
   }
 
-  async validate(payload: any) {
+  async validate(user: any) {
     // Validate the payload or perform additional checks if required
     // For example, you can check if the user exists in the database
     // using the `payload.sub` field, which represents the user ID
-    return { id: payload.sub };
+    return {  user };
   }
 }

@@ -132,6 +132,7 @@ model Admin {
   name              String?
   email             String @unique
   phone             String @unique
+  avatar            String?
   // gender            String?
   password          String
   refresh_token     String?

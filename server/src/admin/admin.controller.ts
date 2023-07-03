@@ -1,4 +1,5 @@
-import { Body, Controller, Delete, Get, Header, NotFoundException, Param, Post, Put, Request, UploadedFile, UseGuards, UseInterceptors } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Delete, Get, Header, NotFoundException, Param, Post, Put, Req, Res, UploadedFile, UseGuards, UseInterceptors } from '@nestjs/common';
+import { Request, Response } from 'express';
 import { AdminService } from './admin.service';
 import { ApiBearerAuth, ApiBody, ApiHeader, ApiOkResponse, ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { AdminLoginDto } from './dtos/admin.login.dto';
@@ -11,11 +12,13 @@ import { diskStorage } from 'multer'
 import { v4 as uuidv4 } from 'uuid'
 import * as path from 'path';
 import { Admin } from '@prisma/client';
+import { of } from 'rxjs';
+import { join } from 'path';
 
 
 export const storage = {
     storage: diskStorage({
-        destination: './uploads/riders/profileimages',
+        destination: './uploads/admin/profileimages',
         filename: (req, file, cb) => {
             const fileName: string = path.parse(file.originalname).name.replace(/\s/g, '') + uuidv4();
             const extension: string = path.parse(file.originalname).ext;
@@ -84,18 +87,44 @@ export class AdminController {
     @ApiOperation({ summary: "Login as an admin" })
     @ApiBody({ type: AdminLoginDto })
     @Post('/login')
-    async login(@Body() adminLoginDto: AdminLoginDto): Promise<{ token: string }> {
+    async login(@Body() adminLoginDto: AdminLoginDto, @Req() req): Promise<{ token: string }> {
         return this.adminService.login(adminLoginDto);
     }
 
-
-
+    @ApiBearerAuth()
+    @Header('Authorization', 'Bearer {{token}}')
+    @UseGuards(AuthGuard('jwt'), AdminAuthGuard)
     @Post('upload')
     @UseInterceptors(FileInterceptor('file', storage))
-    @UseGuards(AuthGuard('jwt'), AdminAuthGuard)
-    uploadFile(@UploadedFile() file, @Request() req): { imagePath: string } {        
-        console.log(file);
-        return { imagePath: file.filename };
+    async uploadFile(@UploadedFile() file, @Req() req): Promise<Admin | null> {
+        const userId = req.user.user.id;
+        if (!file) {
+            throw new BadRequestException("No file provided!");
+        }
+        const imagePath = file.filename;
+        return this.adminService.addAdminProfilePicture(userId, imagePath);
     }
+
+    @ApiBearerAuth()
+    @UseGuards(AuthGuard('jwt'), AdminAuthGuard)
+    @Get('profile/picture')
+    async getProfilePicture(@Req() req, @Res() res): Promise<void> {
+      const userId = req.user.user.id;
+      const admin = await this.adminService.getAdminById(userId);
+    
+      if (!admin || !admin.avatar) {
+        // Return a default placeholder image or error response
+        return res.sendFile(join(process.cwd(), 'uploads/admin/profileimages/defaut-image.png')); // Replace with your default image file path
+      }
+    
+      // Set appropriate content type for the image response
+      res.setHeader('Content-Type', 'image/jpeg'); // Replace with the appropriate content type for your image
+    
+      // Return the image file
+      return res.sendFile(join(process.cwd(), 'uploads/admin/profileimages/' + admin.avatar));
+    }
+    
+
+
 
 }

@@ -6,20 +6,12 @@ import { RiderService } from './rider.service';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { PassportModule } from '@nestjs/passport';
 import { AdminAuthGuard, RiderAuthGuard, RoleAuthGuard } from 'src/auth/role.auth.guard';
+import { AuthModule } from 'src/auth/auth.module';
 
 @Module({
   imports: [    
     ConfigModule,
-    JwtModule.registerAsync({
-      imports: [ConfigModule],
-      useFactory: async (configService: ConfigService) => ({
-        secret: configService.get('JWT_SECRET'),
-        signOptions: {
-          expiresIn: process.env.JWT_EXPIRE,
-        },
-      }),
-      inject: [ConfigService],
-    }),
+    AuthModule,
   ],
   controllers: [RiderController],
   providers: [RiderService, PrismaService, AdminAuthGuard, RoleAuthGuard, RiderAuthGuard],

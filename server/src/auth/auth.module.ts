@@ -13,8 +13,9 @@ import { AdminAuthGuard, RiderAuthGuard, RoleAuthGuard } from './role.auth.guard
       secret: process.env.JWT_SECRET, // Replace with your actual secret key
       signOptions: { expiresIn: process.env.JWT_EXPIRE }, // Adjust the expiration as per your needs
     }),
+    JwtStrategy,
   ],
   providers: [AuthService, PrismaService, JwtStrategy, AdminAuthGuard, RoleAuthGuard, RiderAuthGuard],
-  exports: [AuthService, AdminAuthGuard, RoleAuthGuard, RiderAuthGuard]
+  exports: [AuthService, AdminAuthGuard, RoleAuthGuard, RiderAuthGuard, JwtModule]
 })
 export class AuthModule { }
