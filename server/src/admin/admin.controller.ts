@@ -1,5 +1,4 @@
 import { BadRequestException, Body, Controller, Delete, Get, Header, NotFoundException, Param, Post, Put, Req, Res, UploadedFile, UseGuards, UseInterceptors } from '@nestjs/common';
-import { Request, Response } from 'express';
 import { AdminService } from './admin.service';
 import { ApiBearerAuth, ApiBody, ApiHeader, ApiOkResponse, ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { AdminLoginDto } from './dtos/admin.login.dto';
@@ -12,7 +11,6 @@ import { diskStorage } from 'multer'
 import { v4 as uuidv4 } from 'uuid'
 import * as path from 'path';
 import { Admin } from '@prisma/client';
-import { of } from 'rxjs';
 import { join } from 'path';
 
 
@@ -27,11 +25,10 @@ export const storage = {
     })
 }
 
-@ApiTags('admin') // Add ApiTags decorator
+@ApiTags('admin')
 @Controller('admin')
 export class AdminController {
     constructor(private adminService: AdminService) { }
-
 
     // GET ALL ADMIN
     @ApiBearerAuth()
@@ -109,22 +106,14 @@ export class AdminController {
     @UseGuards(AuthGuard('jwt'), AdminAuthGuard)
     @Get('profile/picture')
     async getProfilePicture(@Req() req, @Res() res): Promise<void> {
-      const userId = req.user.user.id;
-      const admin = await this.adminService.getAdminById(userId);
-    
-      if (!admin || !admin.avatar) {
-        // Return a default placeholder image or error response
-        return res.sendFile(join(process.cwd(), 'uploads/admin/profileimages/defaut-image.png')); // Replace with your default image file path
-      }
-    
-      // Set appropriate content type for the image response
-      res.setHeader('Content-Type', 'image/jpeg'); // Replace with the appropriate content type for your image
-    
-      // Return the image file
-      return res.sendFile(join(process.cwd(), 'uploads/admin/profileimages/' + admin.avatar));
+        const userId = req.user.user.id;
+        const admin = await this.adminService.getAdminById(userId);
+
+        if (!admin || !admin.avatar) {
+            return res.sendFile(join(process.cwd(), 'uploads/admin/profileimages/defaut-image.png'));
+        }
+        res.setHeader('Content-Type', 'image/jpeg');
+        return res.sendFile(join(process.cwd(), 'uploads/admin/profileimages/' + admin.avatar));
     }
-    
-
-
 
 }

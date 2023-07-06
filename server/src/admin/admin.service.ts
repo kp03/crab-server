@@ -1,4 +1,4 @@
-import { BadRequestException, ConflictException, HttpException, Injectable, NotFoundException, UnauthorizedException, UseGuards } from '@nestjs/common';
+import { ConflictException, HttpException, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { Admin } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 import * as bcrypt from 'bcryptjs';
@@ -6,7 +6,7 @@ import { AdminLoginDto } from './dtos/admin.login.dto';
 import { JwtService } from '@nestjs/jwt';
 import { AdminCreateDto } from './dtos/admin.create.dto';
 import { AdminUpdateDto } from './dtos/admin.update.dto';
-import { File } from 'multer';
+
 @Injectable()
 export class AdminService {
     constructor(private readonly prismaService: PrismaService, private readonly jwtService: JwtService) { }
