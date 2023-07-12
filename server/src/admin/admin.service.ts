@@ -1,4 +1,4 @@
-import { ConflictException, HttpException, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
+import { ConflictException, HttpException, Injectable, Logger, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { Admin } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 import * as bcrypt from 'bcryptjs';
@@ -9,7 +9,7 @@ import { AdminUpdateDto } from './dtos/admin.update.dto';
 
 @Injectable()
 export class AdminService {
-    constructor(private readonly prismaService: PrismaService, private readonly jwtService: JwtService) { }
+    constructor(private readonly prismaService: PrismaService, private readonly jwtService: JwtService, private logger: Logger) { }
 
 
     async getAllAdmin(): Promise<Admin[]> {
@@ -41,11 +41,11 @@ export class AdminService {
 
         if (adminExists) {
             if (adminExists.email === email) {
-                console.log('Email already exists');
+                this.logger.log('Email already exists');
                 throw new ConflictException('Email already exists!');
             }
             if (adminExists.phone === phone) {
-                console.log('Phone already exists');
+                this.logger.log('Phone already exists');
                 throw new ConflictException('Phone already exists!');
             }
         }
@@ -62,7 +62,7 @@ export class AdminService {
         });
 
         const message: string = `${admin} created!`;
-        console.log(admin);
+        this.logger.log(admin);
         return admin;
     }
 
@@ -78,12 +78,12 @@ export class AdminService {
         const existedPhone = await this.prismaService.admin.findFirst({ where: { phone } });
 
         if (existedEmail) {
-            console.log('Email already exists');
+            this.logger.log('Email already exists');
             throw new ConflictException('Email already in use!');
         }
 
         if (existedPhone) {
-            console.log('Phone already exists');
+            this.logger.log('Phone already exists');
             throw new ConflictException('Phone already in use!');
         }
         const hashedPassword = await bcrypt.hash(password, 10);
@@ -140,12 +140,12 @@ export class AdminService {
         const isValidPassword = await bcrypt.compare(password, hashedPassword);
 
         if (!isValidPassword) {
-            console.log("Invalid Password!");
+            this.logger.log("Invalid Password!");
             throw new HttpException("Invalid credentials!", 400);
         }
 
-        console.log("admin successfully login!");
-        console.log(admin);
+        this.logger.log("admin successfully login!");
+        this.logger.log(admin);
         const token = this.jwtService.sign({ id: admin.id });
         return { token }
     }

@@ -52,6 +52,18 @@ model Driver {
   updated_at        DateTime @updatedAt
 }
 
+model DriverLocation {
+  id                String @id @default(uuid())
+  oldLatitude       String?
+  oldLongtitude     String?
+  newLatitude       String?
+  newLongtitude     String?
+  driver            Driver?
+  created_at        DateTime @default(now())
+  updated_at        DateTime @updatedAt
+}
+
+
 model Rating {
   id                String @id @default(uuid())
   feedback          String?
@@ -91,18 +103,6 @@ model Payment {
   updated_at        DateTime @updatedAt
 }
 
-
-
-model DriverLocation {
-  id                String @id @default(uuid())
-  oldLatitude       String
-  oldLongtitude     String
-  newLatitude       String
-  newLongtitude     String
-  driver            Driver?
-  created_at        DateTime @default(now())
-  updated_at        DateTime @updatedAt
-}
 
 // model Cab{
 //   id                String @id @default(uuid())

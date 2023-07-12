@@ -76,6 +76,42 @@ export class AdminAuthGuard implements CanActivate {
     }
 }
 
+export class DriverAuthGuard implements CanActivate {
+    constructor(private readonly prismaService: PrismaService, private readonly jwtService: JwtService) { }
+
+    async canActivate(context: ExecutionContext): Promise<boolean> {
+        const request = context.switchToHttp().getRequest();
+        const token = request.headers.authorization?.split(' ')[1];
+
+        if (!token) {
+            return false; // No token provided, deny access
+        }
+
+        const decodedToken = this.verifyToken(token);
+        if (!decodedToken) {
+            return false; // Invalid token, deny access
+        }
+
+        const userId = decodedToken.id;
+
+        // Check if the user exists in the driver table
+        const driver = await this.prismaService.driver.findUnique({
+            where: { id: userId },
+        });
+
+        return !!driver; // Allow access if the driver exists
+    }
+
+    verifyToken(token: string): { id: string } | null {
+        try {
+            const decoded = this.jwtService.verify(token); // Replace 'your_secret_key' with your actual secret key
+            return decoded as { id: string };
+        } catch (error) {
+            return null; // Token verification failed
+        }
+    }
+}
+
 
 
 @Injectable()
@@ -83,12 +119,14 @@ export class RoleAuthGuard implements CanActivate {
     constructor(
         private readonly riderAuthGuard: RiderAuthGuard,
         private readonly adminAuthGuard: AdminAuthGuard,
+        private readonly driverAuthGuard: DriverAuthGuard,
     ) { }
 
     async canActivate(context: ExecutionContext): Promise<boolean> {
         const canActivateRider = await this.riderAuthGuard.canActivate(context);
         const canActivateAdmin = await this.adminAuthGuard.canActivate(context);
-        return canActivateRider || canActivateAdmin;
+        const canActivateDriver = await this.driverAuthGuard.canActivate(context);
+        return canActivateRider || canActivateAdmin || canActivateDriver;
     }
 }
 

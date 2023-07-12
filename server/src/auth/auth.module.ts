@@ -4,7 +4,7 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import { PassportModule } from '@nestjs/passport';
 import { JwtModule } from '@nestjs/jwt';
 import { JwtStrategy } from './jwt.strategy';
-import { AdminAuthGuard, RiderAuthGuard, RoleAuthGuard } from './role.auth.guard';
+import { AdminAuthGuard, DriverAuthGuard, RiderAuthGuard, RoleAuthGuard } from './role.auth.guard';
 
 @Module({
   imports: [
@@ -15,7 +15,7 @@ import { AdminAuthGuard, RiderAuthGuard, RoleAuthGuard } from './role.auth.guard
     }),
     JwtStrategy,
   ],
-  providers: [AuthService, PrismaService, JwtStrategy, AdminAuthGuard, RoleAuthGuard, RiderAuthGuard],
-  exports: [AuthService, AdminAuthGuard, RoleAuthGuard, RiderAuthGuard, JwtModule]
+  providers: [AuthService, PrismaService, JwtStrategy, AdminAuthGuard, RoleAuthGuard, RiderAuthGuard, DriverAuthGuard],
+  exports: [AuthService, AdminAuthGuard, RoleAuthGuard, RiderAuthGuard, JwtModule, DriverAuthGuard]
 })
 export class AuthModule { }
