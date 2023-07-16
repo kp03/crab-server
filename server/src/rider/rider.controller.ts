@@ -11,6 +11,7 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer'
 import { v4 as uuidv4 } from 'uuid'
 import * as path from 'path';
+import { RiderLoginDto } from './dtos/rider.login.dto';
 
 export const storage = {
     storage: diskStorage({
@@ -23,21 +24,18 @@ export const storage = {
     })
 }
 
-
-@ApiTags('rider') // Add ApiTags decorator
+@ApiTags('rider')
 @Controller('rider')
 export class RiderController {
     constructor(private riderService: RiderService) { }
 
-    @ApiOperation({ summary: "Find all rider" })
-    @ApiResponse({ status: 200, description: "Rider Found!" })
+    @ApiOperation({ summary: "Get all rider" })
     @Get('')
     async getAllRider(): Promise<Rider[]> {
         return this.riderService.getAllRider();
     }
 
     @ApiOperation({ summary: "Find a rider by query" })
-    @ApiResponse({ status: 200, description: "Rider Found!" })
     @Get('/profile')
     async findRider(@Query() query: FindARiderDto): Promise<Rider | null> {
         return this.riderService.findRider(query);
@@ -48,7 +46,7 @@ export class RiderController {
     @ApiResponse({ status: 201, description: "Rider successfully created!" })
     @Post('/')
     async create(@Body() riderCreateDto: RiderCreateDto): Promise<Rider> {
-        return this.riderService.create(riderCreateDto);
+        return this.riderService.createRider(riderCreateDto);
     }
 
     @ApiOperation({ summary: "Get rider profile by id" })
@@ -56,7 +54,7 @@ export class RiderController {
     @ApiParam({ name: 'id', type: 'string' })
     @Get('/profile/:id')
     async getRiderProfileById(@Param('id') id: string): Promise<Rider> {
-        return await this.riderService.getRiderProfileById(id);
+        return await this.riderService.getRiderById(id);
     }
 
     @ApiOperation({ summary: "Update rider profile by id" })
@@ -73,17 +71,25 @@ export class RiderController {
     @ApiOperation({ summary: "Delete a rider by id" })
     @ApiResponse({ status: 201, description: "Rider profile deleted!" })
     @ApiParam({ name: 'id', type: 'string' })
-    @Delete('/:id')
+    @Delete('profile/:id')
     async deleteRiderById(@Param('id') id: string) {
         return await this.riderService.deleteRiderById(id);
     }
 
-    @Post('upload')
+    @Post('profile/upload')
     @UseInterceptors(FileInterceptor('file', storage))
+    @ApiOperation({ summary: "Upload a rider profile image" })
     uploadFile(@UploadedFile() file): { imagePath: string } {
-        
-        console.log(file);
         return { imagePath: file.filename };
     }
+
+    // LOGIN AS RIDER
+    @ApiOperation({ summary: "Login as a rider" })
+    @ApiBody({ type: RiderLoginDto })
+    @Post('/login')
+    async login(@Body() riderLoginDto: RiderLoginDto, @Req() req): Promise<{ token: string }> {
+        return this.riderService.login(riderLoginDto);
+    }
+
 }
 

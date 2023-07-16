@@ -3,21 +3,21 @@ import { DriverService } from './driver.service';
 import { ApiBearerAuth, ApiBody, ApiHeader, ApiOkResponse, ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { DriverLoginDto } from './dtos/driver.login.dto';
 import { AuthGuard } from '@nestjs/passport';
-import { AdminAuthGuard, DriverAuthGuard } from 'src/auth/role.auth.guard';
+import { DriverAuthGuard } from 'src/auth/role.auth.guard';
 import { DriverCreateDto } from './dtos/driver.create.dto';
 import { DriverUpdateDto } from './dtos/driver.update.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer'
 import { v4 as uuidv4 } from 'uuid'
 import * as path from 'path';
-import { Admin } from '@prisma/client';
+import { Driver } from '@prisma/client';
 import { join } from 'path';
 import { DriverLocationUpdateDto } from './dtos/driver.location.update.dto';
 
 
 export const storage = {
     storage: diskStorage({
-        destination: './uploads/admin/profileimages',
+        destination: './uploads/drivers/profileimages',
         filename: (req, file, cb) => {
             const fileName: string = path.parse(file.originalname).name.replace(/\s/g, '') + uuidv4();
             const extension: string = path.parse(file.originalname).ext;
@@ -45,7 +45,7 @@ export class DriverController {
     @ApiOperation({ summary: "Find an driver by ID" })
     @ApiResponse({ status: 201, description: "Driver found!" })
     @ApiParam({ name: 'id', type: 'string' })
-    @Get(':id')
+    @Get('profile/:id')
     async getDriverById(@Param('id') id: string) {
         return await this.driverService.getDriverById(id);
     }
@@ -55,21 +55,21 @@ export class DriverController {
     @ApiBody({ type: DriverCreateDto })
     @Post()
     async createADriver(@Body() driverCreateDto: DriverCreateDto) {
-        return await this.driverService.createADriver(driverCreateDto);
+        return await this.driverService.createDriver(driverCreateDto);
     }
 
     // UPDATE A DRIVER
     @ApiOperation({ summary: "Update a driver" })
     @ApiBody({ type: DriverUpdateDto })
-    @Put(':id')
+    @Put('profile/:id')
     async updateADriver(@Param('id') id: string, @Body() driverUpdateDto: DriverUpdateDto) {
-        return await this.driverService.updateADriver(id, driverUpdateDto);
+        return await this.driverService.updateDriverById(id, driverUpdateDto);
     }
 
     // DELETE A DRIVER
     @ApiOperation({ summary: "Delete a driver by ID" })
     @ApiParam({ name: 'id', type: 'string' })
-    @Delete(':id')
+    @Delete('profile/:id')
     async deleteADriver(@Param('id') id: string): Promise<void> {
         try {
             await this.driverService.deleteADriver(id);
@@ -81,7 +81,7 @@ export class DriverController {
         }
     }
 
-    // LOGIN AS ADMIN
+    // LOGIN AS DRIVER
     @ApiOperation({ summary: "Login as an driver" })
     @ApiBody({ type: DriverLoginDto })
     @Post('/login')
@@ -92,9 +92,9 @@ export class DriverController {
     @ApiBearerAuth()
     @Header('Authorization', 'Bearer {{token}}')
     @UseGuards(AuthGuard('jwt'), DriverAuthGuard)
-    @Post('upload')
+    @Post('/profile/upload')
     @UseInterceptors(FileInterceptor('file', storage))
-    async uploadFile(@UploadedFile() file, @Req() req): Promise<Admin | null> {
+    async uploadFile(@UploadedFile() file, @Req() req): Promise<Driver | null> {
         const userId = req.user.user.id;
         if (!file) {
             throw new BadRequestException("No file provided!");
@@ -108,13 +108,13 @@ export class DriverController {
     @Get('profile/picture')
     async getProfilePicture(@Req() req, @Res() res): Promise<void> {
         const userId = req.user.user.id;
-        const admin = await this.driverService.getDriverById(userId);
+        const driver = await this.driverService.getDriverById(userId);
 
-        if (!admin || !admin.avatar) {
+        if (!driver || !driver.avatar) {
             return res.sendFile(join(process.cwd(), 'uploads/driver/profileimages/defaut-image.png'));
         }
         res.setHeader('Content-Type', 'image/jpeg');
-        return res.sendFile(join(process.cwd(), 'uploads/driver/profileimages/' + admin.avatar));
+        return res.sendFile(join(process.cwd(), 'uploads/driver/profileimages/' + driver.avatar));
     }
 
     @ApiOperation({ summary: "Find an driver location by ID" })
@@ -132,6 +132,5 @@ export class DriverController {
     async updateDriverLocation(@Param('id') id: string, @Body() driverLocationUpdateDto: DriverLocationUpdateDto) {
         return await this.driverService.updateDriverLocation(id, driverLocationUpdateDto);
     }
-
 
 }

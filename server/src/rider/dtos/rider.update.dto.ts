@@ -1,13 +1,7 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { IsEmail, IsNotEmpty, IsOptional, IsString, Matches, MinLength } from "class-validator";
+import { IsBoolean, IsEmail, IsNotEmpty, IsOptional, IsString, Matches, MinLength } from "class-validator";
 
 export class RiderUpdateDto {
-    
-    @ApiProperty({example: "example@gmail.com"})
-    @IsNotEmpty()
-    @IsEmail({}, { message: "Please enter correct email!"})
-    @IsOptional()
-    email: string;
 
     @ApiProperty({example: "0903311234"})
     @IsNotEmpty()
@@ -28,5 +22,15 @@ export class RiderUpdateDto {
     @IsOptional()
     @IsString()
     name: string;
+
+    @ApiProperty({example: "male"})
+    @IsOptional()
+    @IsString()
+    gender: string;
+
+    @ApiProperty({example: "true"})
+    @IsOptional()
+    @IsBoolean()
+    isVip: boolean
 
 }

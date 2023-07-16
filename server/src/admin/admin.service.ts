@@ -9,7 +9,11 @@ import { AdminUpdateDto } from './dtos/admin.update.dto';
 
 @Injectable()
 export class AdminService {
-    constructor(private readonly prismaService: PrismaService, private readonly jwtService: JwtService, private logger: Logger) { }
+    constructor(
+        private readonly prismaService: PrismaService,
+        private readonly jwtService: JwtService,
+        private logger: Logger
+    ) {}
 
 
     async getAllAdmin(): Promise<Admin[]> {
@@ -41,11 +45,9 @@ export class AdminService {
 
         if (adminExists) {
             if (adminExists.email === email) {
-                this.logger.log('Email already exists');
                 throw new ConflictException('Email already exists!');
             }
             if (adminExists.phone === phone) {
-                this.logger.log('Phone already exists');
                 throw new ConflictException('Phone already exists!');
             }
         }
@@ -61,8 +63,6 @@ export class AdminService {
             }
         });
 
-        const message: string = `${admin} created!`;
-        this.logger.log(admin);
         return admin;
     }
 

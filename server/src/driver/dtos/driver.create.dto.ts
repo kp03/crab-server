@@ -3,20 +3,20 @@ import { IsEmail, IsNotEmpty, IsString, Matches, MinLength } from "class-validat
 
 export class DriverCreateDto {
 
-    @ApiProperty({ example: 'jhon.doe@gmail.com' })
+    @ApiProperty({ example: 'firebase-id' })
     @IsNotEmpty()
-    @IsEmail({}, { message: "Please enter correct email!" })
-    email: string;
+    @IsString()
+    id: string;
 
     @IsNotEmpty()
     @IsString()
-    @ApiProperty({ example: '0903622719' })
+    @ApiProperty({ example: '0123456789' })
     @Matches(/^(\+\d{1,2}\s?)?\(?\d{3}\)?[\s.-]?\d{3}[\s.-]?\d{4}$/, {
         message: "Invalid phone number!",
     })
     phone: string;
 
-    @ApiProperty({ example: 'Khang Pham' })
+    @ApiProperty({ example: 'Pham Van A' })
     @IsNotEmpty()    
     name: string;
 

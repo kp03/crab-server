@@ -1,5 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
 generator client {
   provider = "prisma-client-js"
 }
@@ -9,133 +7,112 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// Entity for Riders
 model Rider {
-  id                String @id @default(uuid())  
-  name              String?
-  gender            String?
-  email             String @unique
-  trip              Trip[]  
-  phone             String @unique
-  password          String?
-  avatar            String?
-  rating            Rating[]  
-  isVip             Boolean @default(false)
-  refresh_token     String?
-  created_at        DateTime @default(now())
-  updated_at        DateTime @updatedAt  
+  id            String   @id @default(uuid())
+  name          String?
+  gender        String?
+  phone         String   @unique
+  password      String?
+  avatar        String?
+  rating        Rating[]
+  trip          Trip[]
+  isVip         Boolean  @default(false)
+  refresh_token String?
+  created_at    DateTime @default(now())
+  updated_at    DateTime @updatedAt
 }
 
-// Entity for Drivers
 model Driver {
-  id                String @id @default(uuid())
-  name              String?
-  gender            String?
-  email             String @unique
-  phone             String @unique
-  password          String
-  avatar            String?
-  cabName           String?
-  cabType           String?
-  regNo             String?
-  cabSeats          Int?
-  // cab               Cab?  @relation(fields: [cabID], references: [id])
-  // cabID             String? @unique
-  driverLocation    DriverLocation? @relation(fields: [driverLocationID], references: [id])
-  driverLocationID  String? @unique
-  rating            Rating[]
-  trip              Trip[]
-  refresh_token     String?
-  vehicleType       String?
-  vehicleName       String?
-  created_at        DateTime @default(now())
-  updated_at        DateTime @updatedAt
+  id               String          @id @default(uuid())
+  name             String?
+  gender           String?
+  phone            String          @unique
+  password         String
+  avatar           String?
+  licenseNumber    String?
+  status           String?
+  verified         Boolean         @default(false)
+  cabSeats         Int?
+  driverLocation   DriverLocation? @relation(fields: [driverLocationID], references: [id])
+  driverLocationID String?         @unique
+  rating           Rating[]
+  trip             Trip[]
+  refresh_token    String?
+  created_at       DateTime        @default(now())
+  updated_at       DateTime        @updatedAt
 }
 
 model DriverLocation {
-  id                String @id @default(uuid())
-  oldLatitude       String?
-  oldLongtitude     String?
-  newLatitude       String?
-  newLongtitude     String?
-  driver            Driver?
-  created_at        DateTime @default(now())
-  updated_at        DateTime @updatedAt
+  id            String   @id @default(uuid())
+  oldLatitude   Float?
+  oldLongitude  Float?
+  newLatitude   Float?
+  newLongitude  Float?
+  driver        Driver?
+  created_at    DateTime @default(now())
+  updated_at    DateTime @updatedAt
 }
 
-
 model Rating {
-  id                String @id @default(uuid())
-  feedback          String?
-  rating            Int
-  rider             Rider? @relation(fields: [riderID], references: [id])
-  riderID           String? @unique
-  driver            Driver? @relation(fields: [driverID], references: [id])
-  driverID          String? @unique
-  trip              Trip? @relation(fields: [tripID], references: [id])
-  tripID            String? @unique
+  id       String  @id @default(uuid())
+  feedback String?
+  rating   Int
+  rider    Rider?  @relation(fields: [riderID], references: [id])
+  riderID  String? @unique
+  driver   Driver? @relation(fields: [driverID], references: [id])
+  driverID String? @unique
+  trip     Trip?   @relation(fields: [tripID], references: [id])
+  tripID   String? @unique
 }
 
 model Trip {
-  id                String @id @default(uuid())
-  status            String
-  source            String
-  destination       String
-  date              DateTime
-  rider             Rider? @relation(fields: [riderID], references: [id])
-  riderID           String? @unique
-  rating            Rating?
-  driver            Driver? @relation(fields: [driverID], references: [id])
-  driverID          String? @unique
-  trip_length       Float?
-  tri_cost          Float?
-  payment           Payment? @relation(fields: [paymentID], references: [id])
-  paymentID         String? @unique
+  id          String   @id @default(uuid())
+  status      String
+  source      String
+  destination String
+  date        DateTime
+  rider       Rider?   @relation(fields: [riderID], references: [id])
+  riderID     String?  @unique
+  rating      Rating?
+  driver      Driver?  @relation(fields: [driverID], references: [id])
+  driverID    String?  @unique
+  trip_length Float?
+  tri_cost    Float?
+  payment     Payment? @relation(fields: [paymentID], references: [id])
+  paymentID   String?  @unique
 }
 
 model Payment {
-  id                String @id @default(uuid())
-  method            String
-  amount            Float
-  trip              Trip?
-  tripID            String? @unique
-  created_at        DateTime @default(now())
-  updated_at        DateTime @updatedAt
+  id         String   @id @default(uuid())
+  method     String
+  amount     Float
+  trip       Trip?
+  tripID     String?  @unique
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
 }
 
-
-// model Cab{
-//   id                String @id @default(uuid())
-//   type              String
-//   regNo             String
-//   seats             Int
-//   driver            Driver?
-//   created_at        DateTime @default(now())
-//   updated_at        DateTime @updatedAt
-// }
-
 model Caller {
-  id                String @id @default(uuid())
-  first_name        String?
-  last_name         String?
-  gender            String?
-  email             String @unique
-  phone             String @unique
-  password          String  
-  refresh_token     String?
-  created_at        DateTime @default(now())
-  updated_at        DateTime @updatedAt
+  id            String   @id @default(uuid())
+  first_name    String?
+  last_name     String?
+  gender        String?
+  email         String   @unique
+  phone         String   @unique
+  password      String
+  refresh_token String?
+  created_at    DateTime @default(now())
+  updated_at    DateTime @updatedAt
 }
 
 model Admin {
-  id                String @id @default(uuid())
-  name              String?
-  email             String @unique
-  phone             String @unique
-  avatar            String?
-  // gender            String?
-  password          String
-  refresh_token     String?
-  created_at        DateTime @default(now())
-  updated_at        DateTime @updatedAt
+  id            String   @id @default(uuid())
+  name          String?
+  email         String   @unique
+  phone         String   @unique
+  avatar        String?
+  password      String
+  refresh_token String?
+  created_at    DateTime @default(now())
+  updated_at    DateTime @updatedAt
 }
