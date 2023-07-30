@@ -1,4 +1,4 @@
-import { Injectable, CanActivate, ExecutionContext } from '@nestjs/common';
+import { Injectable, CanActivate, ExecutionContext, Inject } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from 'src/prisma/prisma.service';
 
@@ -76,6 +76,7 @@ export class AdminAuthGuard implements CanActivate {
     }
 }
 
+@Injectable()
 export class DriverAuthGuard implements CanActivate {
     constructor(private readonly prismaService: PrismaService, private readonly jwtService: JwtService) { }
 

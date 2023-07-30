@@ -8,18 +8,19 @@ datasource db {
 }
 
 model Rider {
-  id            String   @id @default(uuid())
-  name          String?
-  gender        String?
-  phone         String   @unique
-  password      String?
-  avatar        String?
-  rating        Rating[]
-  trip          Trip[]
-  isVip         Boolean  @default(false)
-  refresh_token String?
-  created_at    DateTime @default(now())
-  updated_at    DateTime @updatedAt
+  name            String?
+  id              String   @id @default(uuid())
+  gender          String?
+  phone           String   @unique
+  password        String?
+  avatar          String?
+  rating          Rating[]
+  trip            Trip[]
+  isVip           Boolean  @default(false)
+  refresh_token   String?
+  firebase_token  String?
+  created_at      DateTime @default(now())
+  updated_at      DateTime @updatedAt
 }
 
 model Driver {
@@ -38,6 +39,7 @@ model Driver {
   rating           Rating[]
   trip             Trip[]
   refresh_token    String?
+  firebase_token   String?
   created_at       DateTime        @default(now())
   updated_at       DateTime        @updatedAt
 }

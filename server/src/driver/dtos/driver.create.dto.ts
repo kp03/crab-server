@@ -1,12 +1,7 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { IsEmail, IsNotEmpty, IsString, Matches, MinLength } from "class-validator";
+import { IsNotEmpty, IsString, Matches, MinLength } from "class-validator";
 
 export class DriverCreateDto {
-
-    @ApiProperty({ example: 'firebase-id' })
-    @IsNotEmpty()
-    @IsString()
-    id: string;
 
     @IsNotEmpty()
     @IsString()

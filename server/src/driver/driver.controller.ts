@@ -3,7 +3,7 @@ import { DriverService } from './driver.service';
 import { ApiBearerAuth, ApiBody, ApiHeader, ApiOkResponse, ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { DriverLoginDto } from './dtos/driver.login.dto';
 import { AuthGuard } from '@nestjs/passport';
-import { DriverAuthGuard } from 'src/auth/role.auth.guard';
+import { AdminAuthGuard, DriverAuthGuard } from 'src/auth/role.auth.guard';
 import { DriverCreateDto } from './dtos/driver.create.dto';
 import { DriverUpdateDto } from './dtos/driver.update.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
@@ -31,15 +31,27 @@ export const storage = {
 export class DriverController {
     constructor(private driverService: DriverService) { }
 
-    // GET ALL DRIVER
+
     @ApiBearerAuth()
     @Header('Authorization', 'Bearer {{token}}')
+    @UseGuards(AuthGuard('jwt'), DriverAuthGuard)
+    @ApiOperation({ summary: "Get driver Profile" })
+    @Get('profile/me')
+    async getProfileInformation(@Req() req): Promise<Driver | null> {
+        const userId = req.user.user.id;        
+        return await this.driverService.getDriverById(userId);        
+    }
+
+    // GET ALL DRIVER
+    @ApiBearerAuth()
+    // @Header('Authorization', 'Bearer {{token}}')
     // @UseGuards(AuthGuard('jwt'), AdminAuthGuard)
     @ApiOperation({ summary: "Get all driver" })
     @Get()
     async getAllDriver() {
         return await this.driverService.getAllDriver();
     }
+
 
     // GET DRIVER BY ID
     @ApiOperation({ summary: "Find an driver by ID" })
@@ -66,6 +78,7 @@ export class DriverController {
         return await this.driverService.updateDriverById(id, driverUpdateDto);
     }
 
+
     // DELETE A DRIVER
     @ApiOperation({ summary: "Delete a driver by ID" })
     @ApiParam({ name: 'id', type: 'string' })
@@ -80,6 +93,8 @@ export class DriverController {
             throw error;
         }
     }
+
+
 
     // LOGIN AS DRIVER
     @ApiOperation({ summary: "Login as an driver" })
@@ -103,6 +118,10 @@ export class DriverController {
         return this.driverService.addDriverProfilePicture(userId, imagePath);
     }
 
+
+
+
+
     @ApiBearerAuth()
     @UseGuards(AuthGuard('jwt'), DriverAuthGuard)
     @Get('profile/picture')
@@ -116,6 +135,8 @@ export class DriverController {
         res.setHeader('Content-Type', 'image/jpeg');
         return res.sendFile(join(process.cwd(), 'uploads/driver/profileimages/' + driver.avatar));
     }
+
+
 
     @ApiOperation({ summary: "Find an driver location by ID" })
     @ApiResponse({ status: 201, description: "Driver found!" })
@@ -132,5 +153,6 @@ export class DriverController {
     async updateDriverLocation(@Param('id') id: string, @Body() driverLocationUpdateDto: DriverLocationUpdateDto) {
         return await this.driverService.updateDriverLocation(id, driverLocationUpdateDto);
     }
+
 
 }

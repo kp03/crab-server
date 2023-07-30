@@ -50,11 +50,12 @@ export class RiderService {
                 throw new ConflictException('Phone already exists!');
             }
         }
+        const hashedPassword = await bcrypt.hash(password, 10);
         const rider = await this.prismaService.rider.create({
             data: {
                 id,
                 phone,
-                password,
+                password: hashedPassword,
                 name
             }
         });
