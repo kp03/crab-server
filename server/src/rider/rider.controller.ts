@@ -3,7 +3,7 @@ import { RiderService } from './rider.service';
 import { RiderCreateDto } from './dtos/rider.create.dto';
 import { AuthGuard } from '@nestjs/passport';
 import { Rider } from '@prisma/client';
-import { AdminAuthGuard } from 'src/auth/role.auth.guard';
+import { AdminAuthGuard, RiderAuthGuard } from 'src/auth/role.auth.guard';
 import { ApiBearerAuth, ApiBody, ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { FindARiderDto } from './dtos/find.rider.dto';
 import { RiderUpdateDto } from './dtos/rider.update.dto';
@@ -12,6 +12,7 @@ import { diskStorage } from 'multer'
 import { v4 as uuidv4 } from 'uuid'
 import * as path from 'path';
 import { RiderLoginDto } from './dtos/rider.login.dto';
+import { RiderRefreshTokenDto } from './dtos/rider.refresh.dto';
 
 export const storage = {
     storage: diskStorage({
@@ -28,6 +29,16 @@ export const storage = {
 @Controller('rider')
 export class RiderController {
     constructor(private riderService: RiderService) { }
+
+    @ApiBearerAuth()
+    @Header('Authorization', 'Bearer {{token}}')
+    @UseGuards(AuthGuard('jwt'), RiderAuthGuard)
+    @ApiOperation({ summary: "Get driver Profile" })
+    @Get('profile/me')
+    async getProfileInformation(@Req() req): Promise<Rider | null> {
+        const userId = req.user.user.id;
+        return await this.riderService.getRiderById(userId);
+    }
 
     @ApiOperation({ summary: "Get all rider" })
     @Get('')
@@ -87,8 +98,28 @@ export class RiderController {
     @ApiOperation({ summary: "Login as a rider" })
     @ApiBody({ type: RiderLoginDto })
     @Post('/login')
-    async login(@Body() riderLoginDto: RiderLoginDto, @Req() req): Promise<{ token: string }> {
+    async login(@Body() riderLoginDto: RiderLoginDto): Promise<{ accessToken: string, refreshToken: string }> {
         return this.riderService.login(riderLoginDto);
+    }
+
+    @ApiBearerAuth()
+    @Header('Authorization', 'Bearer {{token}}')
+    @UseGuards(AuthGuard('jwt'), RiderAuthGuard)
+    @Post('logout')
+    async logout(@Req() req): Promise<void> {
+        // Assuming you have extracted the authenticated rider's ID from the JWT token
+        const riderId = req.user.user.id;
+
+        // Call the logout method in the AuthService to invalidate the refresh token.
+        await this.riderService.logout(riderId);
+    }
+    @ApiOperation({ summary: 'Refresh access token' })
+    @ApiBody({ type: RiderRefreshTokenDto })
+    @ApiResponse({ status: 200, description: 'Returns new access token and refresh token' })
+    @Post('refresh')
+    async refreshToken(@Body('refreshToken') refreshToken: string): Promise<{ newAccessToken: string; newRefreshToken: string }> {
+
+        return await this.riderService.refreshToken(refreshToken);
     }
 
 }

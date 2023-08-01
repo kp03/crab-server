@@ -7,7 +7,7 @@ import { DriverLoginDto } from './dtos/driver.login.dto';
 import { JwtService } from '@nestjs/jwt';
 import { DriverUpdateDto } from './dtos/driver.update.dto';
 import { DriverLocationUpdateDto } from './dtos/driver.location.update.dto';
-
+import { v4 as uuidv4 } from 'uuid';
 @Injectable()
 export class DriverService {
     constructor(
@@ -55,6 +55,7 @@ export class DriverService {
                 phone,
                 name,
                 password: hashedPassword,
+                refresh_token: "refresh-token",
                 driverLocation: {
                     create: {}
                 }
@@ -72,11 +73,6 @@ export class DriverService {
 
         const { phone, password, name, gender, cabSeats, licenseNumber } = data;
 
-        const existedPhone = await this.prismaService.driver.findFirst({ where: { phone } });
-
-        if (existedPhone) {
-            throw new ConflictException('Phone already in use!');
-        }
         const hashedPassword = await bcrypt.hash(password, 10);
         return await this.prismaService.driver.update({
             where: { id }, data: {
@@ -104,32 +100,75 @@ export class DriverService {
         });
     }
 
-    async login(driverLoginDto: DriverLoginDto): Promise<{ token: string }> {
+    async login(driverLoginDto: DriverLoginDto): Promise<{ accessToken: string; refreshToken: string }> {
         const { phone, password } = driverLoginDto;
         if (!phone) {
             throw new Error("Phone number must be provided!");
         }
-
+    
         let driver;
         if (phone) {
             driver = await this.prismaService.driver.findFirst({
                 where: {
-                    phone: phone
-                }
+                    phone: phone,
+                },
             });
         }
-
+    
         if (!driver) {
             throw new UnauthorizedException("Invalid credentials!");
         }
+    
         const hashedPassword = driver.password;
         const isValidPassword = await bcrypt.compare(password, hashedPassword);
-
+    
         if (!isValidPassword) {
             throw new HttpException("Invalid credentials!", 400);
         }
-        const token = this.jwtService.sign({ id: driver.id });
-        return { token };
+    
+        const accessToken = this.jwtService.sign({ id: driver.id });
+        const refreshToken = this.generateRefreshToken(); // Implement this method to generate a refresh token and store it securely.
+        await this.prismaService.driver.update({
+            where: { id: driver.id },
+            data: {
+                refresh_token:refreshToken
+            },
+          });             
+        return { accessToken, refreshToken };
+    }
+
+// You may need to adjust the return type and parameters based on your actual implementation.
+  // The example here assumes you're storing the user ID in the refresh token's payload.
+  async refreshToken(refreshToken: string): Promise<{ newAccessToken: string; newRefreshToken: string }> {   
+    const validDriver = await this.prismaService.driver.findFirst({
+        where: {
+            OR: [
+                { refresh_token: refreshToken },
+            ]
+        }
+    });
+
+    if (!validDriver) {
+        throw new NotFoundException('Invalid refresh token!');
+    }     
+    const newAccessToken = this.jwtService.sign({ id: validDriver.id });
+    const newRefreshToken = this.generateRefreshToken(); // Implement this method to generate a refresh token and store it securely.
+    await this.prismaService.driver.update({
+        where: { id: validDriver.id },
+        data: {
+            refresh_token: newRefreshToken
+        },
+      });             
+    return { newAccessToken, newRefreshToken };
+    
+  }
+
+    generateRefreshToken(): string {
+        const refreshToken = uuidv4(); // Generate a random UUID as the refresh token
+        // Optionally, you can add an expiration date to the refresh token
+        // Save the refresh token in a secure manner (e.g., in the database) if you plan to implement token rotation.
+
+        return refreshToken;
     }
 
     async addDriverProfilePicture(id: string, imagePath: string): Promise<Driver | null> {

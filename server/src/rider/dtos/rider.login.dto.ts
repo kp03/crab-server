@@ -11,7 +11,7 @@ export class RiderLoginDto {
     })
     readonly phone: string;
 
-    @ApiProperty({example: "password!"})
+    @ApiProperty({example: "password"})
     @IsString()
     @MinLength(5)
     password: string;

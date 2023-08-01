@@ -1,4 +1,4 @@
-import { BadRequestException, Body, Controller, Delete, Get, Header, NotFoundException, Param, Post, Put, Req, Res, UploadedFile, UseGuards, UseInterceptors } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Delete, Get, Header, NotFoundException, Param, Post, Put, Req, Res, UnauthorizedException, UploadedFile, UseGuards, UseInterceptors } from '@nestjs/common';
 import { DriverService } from './driver.service';
 import { ApiBearerAuth, ApiBody, ApiHeader, ApiOkResponse, ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { DriverLoginDto } from './dtos/driver.login.dto';
@@ -13,6 +13,8 @@ import * as path from 'path';
 import { Driver } from '@prisma/client';
 import { join } from 'path';
 import { DriverLocationUpdateDto } from './dtos/driver.location.update.dto';
+import { JwtService } from '@nestjs/jwt';
+import { DriverRefreshTokenDto } from './dtos/driver.refresh.dto';
 
 
 export const storage = {
@@ -29,8 +31,7 @@ export const storage = {
 @ApiTags('driver')
 @Controller('driver')
 export class DriverController {
-    constructor(private driverService: DriverService) { }
-
+    constructor(private driverService: DriverService, private readonly jwtService: JwtService) { }
 
     @ApiBearerAuth()
     @Header('Authorization', 'Bearer {{token}}')
@@ -43,7 +44,7 @@ export class DriverController {
     }
 
     // GET ALL DRIVER
-    @ApiBearerAuth()
+    // @ApiBearerAuth()
     // @Header('Authorization', 'Bearer {{token}}')
     // @UseGuards(AuthGuard('jwt'), AdminAuthGuard)
     @ApiOperation({ summary: "Get all driver" })
@@ -94,13 +95,22 @@ export class DriverController {
         }
     }
 
+    @ApiOperation({ summary: 'Refresh access token' })
+    @ApiBody({ type: DriverRefreshTokenDto })
+    @ApiResponse({ status: 200, description: 'Returns new access token and refresh token' })
+    @Post('refresh')
+    async refreshToken(@Body('refreshToken') refreshToken: string): Promise<{ newAccessToken: string; newRefreshToken: string }> {
+      
+        return await this.driverService.refreshToken(refreshToken);
+    }
+
 
 
     // LOGIN AS DRIVER
     @ApiOperation({ summary: "Login as an driver" })
     @ApiBody({ type: DriverLoginDto })
     @Post('/login')
-    async login(@Body() driverLoginDto: DriverLoginDto, @Req() req): Promise<{ token: string }> {
+    async login(@Body() driverLoginDto: DriverLoginDto): Promise<{ accessToken: string, refreshToken: string}> {
         return this.driverService.login(driverLoginDto);
     }
 
@@ -117,10 +127,6 @@ export class DriverController {
         const imagePath = file.filename;
         return this.driverService.addDriverProfilePicture(userId, imagePath);
     }
-
-
-
-
 
     @ApiBearerAuth()
     @UseGuards(AuthGuard('jwt'), DriverAuthGuard)
