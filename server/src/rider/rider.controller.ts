@@ -13,6 +13,7 @@ import { v4 as uuidv4 } from 'uuid'
 import * as path from 'path';
 import { RiderLoginDto } from './dtos/rider.login.dto';
 import { RiderRefreshTokenDto } from './dtos/rider.refresh.dto';
+import { RiderDeviceTokenDto } from './dtos/rider.devicetoken.dto';
 
 export const storage = {
     storage: diskStorage({
@@ -121,6 +122,17 @@ export class RiderController {
 
         return await this.riderService.refreshToken(refreshToken);
     }
+
+    @ApiBearerAuth()
+    @Header('Authorization', 'Bearer {{token}}')
+    @UseGuards(AuthGuard('jwt'), RiderAuthGuard)
+    @ApiBody({type: RiderDeviceTokenDto})
+    @ApiOperation({ summary: "Update driver device token" })
+    @Post('profile/deviceToken')
+    async addDeviceToken(@Req() req, @Body() driverDeviceTokenDto: RiderDeviceTokenDto): Promise<string | null> {
+        const userId = req.user.user.id;        
+        return await this.riderService.addDeviceToken(userId, driverDeviceTokenDto.deviceToken);        
+    } 
 
 }
 

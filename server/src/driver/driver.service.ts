@@ -8,12 +8,12 @@ import { JwtService } from '@nestjs/jwt';
 import { DriverUpdateDto } from './dtos/driver.update.dto';
 import { DriverLocationUpdateDto } from './dtos/driver.location.update.dto';
 import { v4 as uuidv4 } from 'uuid';
+
 @Injectable()
 export class DriverService {
     constructor(
         private readonly prismaService: PrismaService,
-        private readonly jwtService: JwtService,
-
+        private readonly jwtService: JwtService,        
     ) { }
 
     async getAllDriver(): Promise<Driver[] | []> {
@@ -56,6 +56,7 @@ export class DriverService {
                 name,
                 password: hashedPassword,
                 refresh_token: "refresh-token",
+                device_token: "device-token",
                 driverLocation: {
                     create: {}
                 }
@@ -215,8 +216,6 @@ export class DriverService {
           return updatedDriverLocation;
     }
 
-
-
     async getDriverLocation(id: string) {
         const driverExists = await this.prismaService.driver.findUnique({ where: { id } });
         if (!driverExists) {
@@ -230,4 +229,18 @@ export class DriverService {
         return updatedDriverLocation;
     }
 
+    async addDeviceToken(id: string, deviceToken: string): Promise<string | null> {
+        const driver = await this.prismaService.driver.findUnique({ where: { id: id } });
+        if (!driver) {
+            throw new NotFoundException("Driver not found!");
+        }
+
+        await this.prismaService.driver.update({
+            where: { id: id },
+            data: { device_token: deviceToken  }
+        });
+
+        return deviceToken;
+    }
 }
+

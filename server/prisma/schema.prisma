@@ -19,6 +19,7 @@ model Rider {
   isVip           Boolean  @default(false)
   refresh_token   String?
   firebase_token  String?
+  device_token    String?
   created_at      DateTime @default(now())
   updated_at      DateTime @updatedAt
 }
@@ -40,6 +41,7 @@ model Driver {
   trip             Trip[]
   refresh_token    String?
   firebase_token   String?
+  device_token     String?
   created_at       DateTime        @default(now())
   updated_at       DateTime        @updatedAt
 }

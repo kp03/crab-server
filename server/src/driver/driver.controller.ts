@@ -3,7 +3,7 @@ import { DriverService } from './driver.service';
 import { ApiBearerAuth, ApiBody, ApiHeader, ApiOkResponse, ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { DriverLoginDto } from './dtos/driver.login.dto';
 import { AuthGuard } from '@nestjs/passport';
-import { AdminAuthGuard, DriverAuthGuard } from 'src/auth/role.auth.guard';
+import { AdminAuthGuard, DriverAuthGuard, RiderAuthGuard } from 'src/auth/role.auth.guard';
 import { DriverCreateDto } from './dtos/driver.create.dto';
 import { DriverUpdateDto } from './dtos/driver.update.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
@@ -15,6 +15,7 @@ import { join } from 'path';
 import { DriverLocationUpdateDto } from './dtos/driver.location.update.dto';
 import { JwtService } from '@nestjs/jwt';
 import { DriverRefreshTokenDto } from './dtos/driver.refresh.dto';
+import { DriverDeviceTokenDto } from './dtos/driver.devicetoken.dto';
 
 
 export const storage = {
@@ -39,8 +40,8 @@ export class DriverController {
     @ApiOperation({ summary: "Get driver Profile" })
     @Get('profile/me')
     async getProfileInformation(@Req() req): Promise<Driver | null> {
-        const userId = req.user.user.id;        
-        return await this.driverService.getDriverById(userId);        
+        const userId = req.user.user.id;
+        return await this.driverService.getDriverById(userId);
     }
 
     // GET ALL DRIVER
@@ -100,7 +101,7 @@ export class DriverController {
     @ApiResponse({ status: 200, description: 'Returns new access token and refresh token' })
     @Post('refresh')
     async refreshToken(@Body('refreshToken') refreshToken: string): Promise<{ newAccessToken: string; newRefreshToken: string }> {
-      
+
         return await this.driverService.refreshToken(refreshToken);
     }
 
@@ -110,7 +111,7 @@ export class DriverController {
     @ApiOperation({ summary: "Login as an driver" })
     @ApiBody({ type: DriverLoginDto })
     @Post('/login')
-    async login(@Body() driverLoginDto: DriverLoginDto): Promise<{ accessToken: string, refreshToken: string}> {
+    async login(@Body() driverLoginDto: DriverLoginDto): Promise<{ accessToken: string, refreshToken: string }> {
         return this.driverService.login(driverLoginDto);
     }
 
@@ -160,5 +161,14 @@ export class DriverController {
         return await this.driverService.updateDriverLocation(id, driverLocationUpdateDto);
     }
 
-
+    @ApiBearerAuth()
+    @Header('Authorization', 'Bearer {{token}}')
+    @UseGuards(AuthGuard('jwt'), RiderAuthGuard)
+    @ApiBody({ type: DriverDeviceTokenDto })
+    @ApiOperation({ summary: "Update driver device token" })
+    @Post('profile/deviceToken')
+    async addDeviceToken(@Req() req, @Body() driverDeviceTokenDto: DriverDeviceTokenDto): Promise<string | null> {
+        const userId = req.user.user.id;
+        return await this.driverService.addDeviceToken(userId, driverDeviceTokenDto.deviceToken);
+    }
 }

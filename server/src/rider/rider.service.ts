@@ -189,4 +189,18 @@ export class RiderService {
 
         return refreshToken;
     }
+
+    async addDeviceToken(id: string, deviceToken: string): Promise<string | null> {
+        const driver = await this.prismaService.rider.findUnique({ where: { id: id } });
+        if (!driver) {
+            throw new NotFoundException("Rider not found!");
+        }
+
+        await this.prismaService.rider.update({
+            where: { id: id },
+            data: { device_token: deviceToken  }
+        });
+
+        return deviceToken;
+    }
 }
