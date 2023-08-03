@@ -6,10 +6,12 @@ import { AdminModule } from './admin/admin.module';
 import { RiderModule } from './rider/rider.module';
 import { AuthModule } from './auth/auth.module';
 import { DriverModule } from './driver/driver.module';
+import { ImageModule } from './image/image.module';
+import { NotificationModule } from './notification/notification.module';
 
 
 @Module({
-  imports: [PrismaModule, AdminModule, RiderModule, AuthModule, DriverModule],
+  imports: [PrismaModule, AdminModule, RiderModule, AuthModule, DriverModule, ImageModule, NotificationModule],
   controllers: [AppController],
   providers: [AppService],
 })
