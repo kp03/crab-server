@@ -318,9 +318,9 @@ export class RiderService {
     }
 
 
-    async estimateTripFare(requestTripDto: RequestTripDto, requestedTime: Date): Promise<{ estimatedFare: number }> {
+    async estimateTripFare(requestTripDto: RequestTripDto, requestedTime: Date): Promise<{ fare4Seats: number; fare7Seats: number }> {
 
-        const { startLat, startLong, distance, duration, cabSeats } = requestTripDto;
+        const { startLat, startLong, distance, duration } = requestTripDto;
 
         // Calculate the base fare per kilometer and fare per minute
         const baseFarePerKilometer = 10000; // Replace with your actual pricing
@@ -343,12 +343,14 @@ export class RiderService {
         // Apply the multiplier to the time-based fare
         const adjustedTimeFare = timeFare * trafficMultiplier;
 
-        // Calculate the total fare
-        const totalFare = distanceFare + adjustedTimeFare + seatFare * cabSeats;
+        // Calculate the total fare for 4 seats
+        const totalFare4Seats = distanceFare + adjustedTimeFare + seatFare * 4;
 
-        // Perform any additional operations or database interactions if needed
+        // Calculate the total fare for 7 seats
+        const totalFare7Seats = distanceFare + adjustedTimeFare + seatFare * 7;
 
-        return { estimatedFare: totalFare };
+        // Return both estimated fares
+        return { fare4Seats: totalFare4Seats, fare7Seats: totalFare7Seats };
     }
 
     async fetchWeatherData(lat: number, lon: number): Promise<any> {
@@ -389,8 +391,7 @@ export class RiderService {
     }
 
     // async createTrip(startLat: number, startLong: number, endLat: number, endLong: number, id: string): Promise<Trip> {
-    //     const rider = this.prismaService
-
+        
     // }
 
 }

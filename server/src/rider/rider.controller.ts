@@ -46,11 +46,10 @@ export class RiderController {
     }
 
     @Post('/trip/estimate')
-    async getEstimateFare(@Body() requestTripDto: RequestTripDto): Promise<{ estimateFare: number }> {
+    async getEstimateFare(@Body() requestTripDto: RequestTripDto): Promise<{ fare4Seats: number, fare7Seats: number }> {
         const requestedTime = new Date();
         const returnEstimateFare = await this.riderService.estimateTripFare(requestTripDto, requestedTime);
-        return {estimateFare: returnEstimateFare.estimatedFare}
-        
+        return {fare4Seats: returnEstimateFare.fare4Seats, fare7Seats: returnEstimateFare.fare7Seats}        
     }
 
     @ApiBearerAuth()

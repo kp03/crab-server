@@ -18,9 +18,4 @@ export class RequestTripDto {
     @ApiProperty({example: "30"})
     @IsNumber()
     duration: number
-
-
-    @ApiProperty({example: "4"})
-    @IsNumber()
-    cabSeats: number
 }
