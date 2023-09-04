@@ -271,6 +271,7 @@ export class RiderService {
         return updatedRiderLocation;
     }
 
+    // Tìm driver gần nhát -> Limit là 5, có thể chỉnh sửa
     async findNearestDrivers(userLatitude: number, userLongitude: number, limit: number = 5): Promise<Driver[] | []> {
         const drivers = await this.prismaService.driver.findMany(); // Fetch all drivers
 
