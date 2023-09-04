@@ -1,8 +1,8 @@
-import { Body, Controller, Delete, Get, Header, Param, Post, Put, Query, Req, UploadedFile, UseGuards, UseInterceptors } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Header, Param, Post, Put, Query, Req, Res, UploadedFile, UseGuards, UseInterceptors } from '@nestjs/common';
 import { RiderService } from './rider.service';
 import { RiderCreateDto } from './dtos/rider.create.dto';
 import { AuthGuard } from '@nestjs/passport';
-import { Rider } from '@prisma/client';
+import { Driver, Rider } from '@prisma/client';
 import { AdminAuthGuard, RiderAuthGuard } from 'src/auth/role.auth.guard';
 import { ApiBearerAuth, ApiBody, ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { FindARiderDto } from './dtos/find.rider.dto';
@@ -14,6 +14,8 @@ import * as path from 'path';
 import { RiderLoginDto } from './dtos/rider.login.dto';
 import { RiderRefreshTokenDto } from './dtos/rider.refresh.dto';
 import { RiderDeviceTokenDto } from './dtos/rider.devicetoken.dto';
+import { RiderLocationUpdateDto } from './dtos/rider.location.update.dto';
+import { RequestTripDto } from './dtos/rider.request.dto';
 
 export const storage = {
     storage: diskStorage({
@@ -31,6 +33,26 @@ export const storage = {
 export class RiderController {
     constructor(private riderService: RiderService) { }
 
+    // Get all nearest drivers
+    @ApiBearerAuth()
+    @Header('Authorization', 'Bearer {{token}}')
+    @UseGuards(AuthGuard('jwt'), RiderAuthGuard)
+    @ApiOperation({ summary: "Get all nearest drivers" })
+    @Get('/location/nearestDriver')
+    async findNearestDrivers(@Req() req): Promise<Driver[] | null> {
+        const userId = req.user.user.id;
+        const riderLocation = await this.riderService.getRiderLocation(userId);
+        return await this.riderService.findNearestDrivers(riderLocation.newLatitude, riderLocation.newLongitude);
+    }
+
+    @Post('/trip/estimate')
+    async getEstimateFare(@Body() requestTripDto: RequestTripDto): Promise<{ estimateFare: number }> {
+        const requestedTime = new Date();
+        const returnEstimateFare = await this.riderService.estimateTripFare(requestTripDto, requestedTime);
+        return {estimateFare: returnEstimateFare.estimatedFare}
+        
+    }
+
     @ApiBearerAuth()
     @Header('Authorization', 'Bearer {{token}}')
     @UseGuards(AuthGuard('jwt'), RiderAuthGuard)
@@ -40,6 +62,7 @@ export class RiderController {
         const userId = req.user.user.id;
         return await this.riderService.getRiderById(userId);
     }
+
 
     @ApiOperation({ summary: "Get all rider" })
     @Get('')
@@ -88,6 +111,24 @@ export class RiderController {
         return await this.riderService.deleteRiderById(id);
     }
 
+    @ApiOperation({ summary: "Find a rider location by ID" })
+    @ApiResponse({ status: 201, description: "Rider found!" })
+    @ApiParam({ name: 'id', type: 'string' })
+    @Get('/location/:id')
+    async getRiderLocation(@Param('id') id: string) {
+        return await this.riderService.getRiderLocation(id);
+    }
+
+    // UPDATE A Rider Location
+    @ApiOperation({ summary: "Update a rider location" })
+    @ApiBody({ type: RiderLocationUpdateDto })
+    @Put('/location/:id')
+    async updateRiderLocation(@Param('id') id: string, @Body() riderLocationUpdateDto: RiderLocationUpdateDto) {
+        return await this.riderService.updateRiderLocation(id, riderLocationUpdateDto);
+    }
+
+
+
     @Post('profile/upload')
     @UseInterceptors(FileInterceptor('file', storage))
     @ApiOperation({ summary: "Upload a rider profile image" })
@@ -102,6 +143,8 @@ export class RiderController {
     async login(@Body() riderLoginDto: RiderLoginDto): Promise<{ accessToken: string, refreshToken: string }> {
         return this.riderService.login(riderLoginDto);
     }
+
+    
 
     @ApiBearerAuth()
     @Header('Authorization', 'Bearer {{token}}')
@@ -134,5 +177,6 @@ export class RiderController {
         return await this.riderService.addDeviceToken(userId, driverDeviceTokenDto.deviceToken);        
     } 
 
+    
 }
 
