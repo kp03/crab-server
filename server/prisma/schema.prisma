@@ -85,16 +85,22 @@ model Rating {
 model Trip {
   id          String   @id @default(uuid())
   status      String
+  sourceLat   Float
+  sourceLong  Float
   source      String
+  destLat     Float
+  destLong    Float
   destination String
+  distance    Float
+  cabSeats    Int
   date        DateTime
   rider       Rider?   @relation(fields: [riderID], references: [id])
-  riderID     String?  @unique
+  riderID     String? 
   rating      Rating?
   driver      Driver?  @relation(fields: [driverID], references: [id])
   driverID    String?  @unique
   trip_length Float?
-  tri_cost    Float?
+  trip_cost   Float?
   payment     Payment? @relation(fields: [paymentID], references: [id])
   paymentID   String?  @unique
 }

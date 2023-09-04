@@ -17,6 +17,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { RiderLocationUpdateDto } from './dtos/rider.location.update.dto';
 import { RequestTripDto } from './dtos/rider.request.dto';
 import axios from 'axios';
+import { CreateTripDto } from './dtos/rider.ride.create.dto';
 @Injectable()
 export class RiderService {
     constructor(
@@ -371,7 +372,7 @@ export class RiderService {
             return response.data.current.condition.text;
         } catch (error) {
             console.error(error);
-        }        
+        }
     }
 
     calculateTrafficMultiplier(requestedTime: Date, weatherData: any): number {
@@ -389,9 +390,58 @@ export class RiderService {
 
         return 1.0; // Default to no traffic impact
     }
-
-    // async createTrip(startLat: number, startLong: number, endLat: number, endLong: number, id: string): Promise<Trip> {
-        
-    // }
+    async createTrip(createTripDto: CreateTripDto, id: string): Promise<{ message: string; trip: Trip; rider: Rider }> {
+        try {
+          const riderExists = await this.prismaService.rider.findUnique({
+            where: { id },
+          });
+          if (!riderExists) {
+            throw new NotFoundException('Rider not found');
+          }
+      
+          const { startLat, startLong, source, endLat, endLong, destination, distance, duration, cabSeats } = createTripDto;
+          const estTripDto = { startLat, startLong, distance, duration };
+          const requestedTime = new Date();
+          const estFare = await this.estimateTripFare(estTripDto, requestedTime);
+      
+          let trip_cost;
+          if (cabSeats == 4) {
+            trip_cost = estFare.fare4Seats;
+          } else {
+            trip_cost = estFare.fare7Seats;
+          }
+      
+          const newTrip = await this.prismaService.trip.create({
+            data: {
+              status: "processing",
+              sourceLat: startLat,
+              sourceLong: startLong,
+              source: source,
+              destLat: endLat,
+              destLong: endLong,
+              destination: destination,
+              cabSeats: cabSeats,
+              trip_cost: trip_cost,
+              trip_length: duration,
+              distance: distance,
+              riderID: id,
+              date: new Date().toISOString(), // Convert to ISO 8601 format
+            }
+          });
+      
+          // Construct the JSON response
+          const jsonResponse = {
+            message: 'Trip created successfully',
+            trip: newTrip,
+            rider: riderExists,
+          };
+      
+          return jsonResponse;
+        } catch (error) {
+          // Handle errors and return an error response if needed
+          throw error; // You can customize error handling here
+        }
+      }
+      
 
 }

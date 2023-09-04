@@ -2,7 +2,7 @@ import { Body, Controller, Delete, Get, Header, Param, Post, Put, Query, Req, Re
 import { RiderService } from './rider.service';
 import { RiderCreateDto } from './dtos/rider.create.dto';
 import { AuthGuard } from '@nestjs/passport';
-import { Driver, Rider } from '@prisma/client';
+import { Driver, Rider, Trip } from '@prisma/client';
 import { AdminAuthGuard, RiderAuthGuard } from 'src/auth/role.auth.guard';
 import { ApiBearerAuth, ApiBody, ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { FindARiderDto } from './dtos/find.rider.dto';
@@ -16,6 +16,7 @@ import { RiderRefreshTokenDto } from './dtos/rider.refresh.dto';
 import { RiderDeviceTokenDto } from './dtos/rider.devicetoken.dto';
 import { RiderLocationUpdateDto } from './dtos/rider.location.update.dto';
 import { RequestTripDto } from './dtos/rider.request.dto';
+import { CreateTripDto } from './dtos/rider.ride.create.dto';
 
 export const storage = {
     storage: diskStorage({
@@ -43,6 +44,15 @@ export class RiderController {
         const userId = req.user.user.id;
         const riderLocation = await this.riderService.getRiderLocation(userId);
         return await this.riderService.findNearestDrivers(riderLocation.newLatitude, riderLocation.newLongitude);
+    }
+
+    @ApiBearerAuth()
+    @Header('Authorization', 'Bearer {{token}}')
+    @UseGuards(AuthGuard('jwt'), RiderAuthGuard)
+    @Post('/trips/')
+    async createTrip(@Req() req, @Body() createTripDto: CreateTripDto): Promise<{message: string; trip: Trip; rider: Rider}> {
+        const userId = req.user.user.id;
+        return await this.riderService.createTrip(createTripDto, userId);
     }
 
     @Post('/trip/estimate')
