@@ -7,11 +7,15 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import { PassportModule } from '@nestjs/passport';
 import { AdminAuthGuard, RiderAuthGuard, RoleAuthGuard } from 'src/auth/role.auth.guard';
 import { AuthModule } from 'src/auth/auth.module';
+import { NotificationModule } from 'src/notification/notification.module';
+import { DriverModule } from 'src/driver/driver.module';
 
 @Module({
   imports: [    
     ConfigModule,
     AuthModule,
+    NotificationModule,
+    DriverModule
   ],
   controllers: [RiderController],
   providers: [RiderService, PrismaService, AdminAuthGuard, RoleAuthGuard, RiderAuthGuard],

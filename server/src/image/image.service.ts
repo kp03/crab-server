@@ -8,19 +8,19 @@ export class ImageService {
   constructor(private readonly httpService: HttpService) {}
 
   /**
-   * 
+   *
    * @param file a image
    * @returns url of image on cloud
-   * @link https://api.imgbb.com/ 
+   * @link https://api.imgbb.com/
    */
-  async saveImageToCloud(file: Express.Multer.File) : Promise<String> {
+  async saveImageToCloud(file: Express.Multer.File): Promise<string> {
     // prepare form data
     const formData = new FormData();
 
     // add to form data key 'image', value is file in base64 form (maximum 32 MB)
     formData.append('image', file.buffer.toString('base64'));
 
-    // send form data vie POST request, get property "data" of return 
+    // send form data vie POST request, get property "data" of return
     // remember to put your api key from imgbb
     const { data: imageData } = await firstValueFrom(
       this.httpService

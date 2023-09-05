@@ -1,10 +1,10 @@
 import {
-    ConflictException,
-    HttpException,
-    Injectable,
-    Logger,
-    NotFoundException,
-    UnauthorizedException,
+  ConflictException,
+  HttpException,
+  Injectable,
+  Logger,
+  NotFoundException,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { Driver, DriverLocation } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
@@ -15,263 +15,264 @@ import { JwtService } from '@nestjs/jwt';
 import { DriverUpdateDto } from './dtos/driver.update.dto';
 import { DriverLocationUpdateDto } from './dtos/driver.location.update.dto';
 import { v4 as uuidv4 } from 'uuid';
+import { ImageService } from 'src/image/image.service';
 
 @Injectable()
 export class DriverService {
-    constructor(
-        private readonly prismaService: PrismaService,
-        private readonly jwtService: JwtService,
-    ) { }
+  constructor(
+    private readonly prismaService: PrismaService,
+    private readonly jwtService: JwtService,
+    private readonly imageService: ImageService,
+  ) {}
 
-    async getAllDriver(): Promise<Driver[] | []> {
-        return this.prismaService.driver.findMany();
+  async getAllDriver(): Promise<Driver[] | []> {
+    return this.prismaService.driver.findMany();
+  }
+
+  async getDriverById(id: string): Promise<Driver | null> {
+    const driver: Driver = await this.prismaService.driver.findUnique({
+      where: { id },
+    });
+
+    if (!driver) {
+      throw new NotFoundException('Driver not found!');
     }
 
-    async getDriverById(id: string): Promise<Driver | null> {
-        const driver: Driver = await this.prismaService.driver.findUnique({
-            where: { id },
-        });
+    return await this.prismaService.driver.findUnique({ where: { id } });
+  }
 
-        if (!driver) {
-            throw new NotFoundException('Driver not found!');
-        }
+  async createDriver(createDto: DriverCreateDto): Promise<Driver> {
+    const { phone, password, name } = createDto;
 
-        return await this.prismaService.driver.findUnique({ where: { id } });
+    const driverExists = await this.prismaService.driver.findFirst({
+      where: {
+        OR: [{ phone: phone }],
+      },
+    });
+
+    if (driverExists) {
+      if (driverExists.phone === phone) {
+        throw new ConflictException('Phone already exists!');
+      }
     }
 
-    async createDriver(createDto: DriverCreateDto): Promise<Driver> {
-        const { phone, password, name } = createDto;
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const driver = await this.prismaService.driver.create({
+      data: {
+        phone,
+        name,
+        password: hashedPassword,
+        refresh_token: 'refresh-token',
+        device_token: 'device-token',
+        driverLocation: {
+          create: {
+            newLatitude: 10.2,
+            newLongitude: 10.5,
+          },
+        },
+      },
+      include: { driverLocation: true }, // Include the driver location in the response
+    });
+    return driver;
+  }
 
-        const driverExists = await this.prismaService.driver.findFirst({
-            where: {
-                OR: [{ phone: phone }],
-            },
-        });
-
-        if (driverExists) {
-            if (driverExists.phone === phone) {
-                throw new ConflictException('Phone already exists!');
-            }
-        }
-
-        const hashedPassword = await bcrypt.hash(password, 10);
-        const driver = await this.prismaService.driver.create({
-            data: {
-                phone,
-                name,
-                password: hashedPassword,
-                refresh_token: 'refresh-token',
-                device_token: 'device-token',
-                driverLocation: {
-                    create: {
-                        newLatitude: 10.2,
-                        newLongitude: 10.5
-                    },
-                },
-            },
-            include: { driverLocation: true }, // Include the driver location in the response
-        });
-        return driver;
+  async updateDriverById(
+    id: string,
+    data: DriverUpdateDto,
+  ): Promise<Driver | null> {
+    const driverExists = await this.prismaService.driver.findUnique({
+      where: { id },
+    });
+    if (!driverExists) {
+      throw new NotFoundException('driver not found');
     }
 
-    async updateDriverById(
-        id: string,
-        data: DriverUpdateDto,
-    ): Promise<Driver | null> {
-        const driverExists = await this.prismaService.driver.findUnique({
-            where: { id },
-        });
-        if (!driverExists) {
-            throw new NotFoundException('driver not found');
-        }
+    const { phone, password, name, gender, cabSeats, licenseNumber } = data;
 
-        const { phone, password, name, gender, cabSeats, licenseNumber } = data;
+    const hashedPassword = await bcrypt.hash(password, 10);
+    return await this.prismaService.driver.update({
+      where: { id },
+      data: {
+        phone,
+        password: hashedPassword,
+        name,
+        gender,
+        cabSeats,
+        licenseNumber,
+        updated_at: { set: new Date() },
+      },
+    });
+  }
 
-        const hashedPassword = await bcrypt.hash(password, 10);
-        return await this.prismaService.driver.update({
-            where: { id },
-            data: {
-                phone,
-                password: hashedPassword,
-                name,
-                gender,
-                cabSeats,
-                licenseNumber,
-                updated_at: { set: new Date() },
-            },
-        });
+  async deleteADriver(id: string): Promise<void> {
+    const driver = await this.prismaService.driver.findUnique({
+      where: { id },
+    });
+
+    if (!driver) {
+      throw new NotFoundException('Driver not found!');
+    }
+    await this.prismaService.driver.delete({
+      where: { id },
+    });
+  }
+
+  async login(
+    driverLoginDto: DriverLoginDto,
+  ): Promise<{ accessToken: string; refreshToken: string }> {
+    const { phone, password } = driverLoginDto;
+    if (!phone) {
+      throw new Error('Phone number must be provided!');
     }
 
-    async deleteADriver(id: string): Promise<void> {
-        const driver = await this.prismaService.driver.findUnique({
-            where: { id },
-        });
-
-        if (!driver) {
-            throw new NotFoundException('Driver not found!');
-        }
-        await this.prismaService.driver.delete({
-            where: { id },
-        });
+    let driver;
+    if (phone) {
+      driver = await this.prismaService.driver.findFirst({
+        where: {
+          phone: phone,
+        },
+      });
     }
 
-    async login(
-        driverLoginDto: DriverLoginDto,
-    ): Promise<{ accessToken: string; refreshToken: string }> {
-        const { phone, password } = driverLoginDto;
-        if (!phone) {
-            throw new Error('Phone number must be provided!');
-        }
-
-        let driver;
-        if (phone) {
-            driver = await this.prismaService.driver.findFirst({
-                where: {
-                    phone: phone,
-                },
-            });
-        }
-
-        if (!driver) {
-            throw new UnauthorizedException('Invalid credentials!');
-        }
-
-        const hashedPassword = driver.password;
-        const isValidPassword = await bcrypt.compare(password, hashedPassword);
-
-        if (!isValidPassword) {
-            throw new HttpException('Invalid credentials!', 400);
-        }
-
-        const accessToken = this.jwtService.sign({ id: driver.id });
-        const refreshToken = this.generateRefreshToken(); // Implement this method to generate a refresh token and store it securely.
-        await this.prismaService.driver.update({
-            where: { id: driver.id },
-            data: {
-                refresh_token: refreshToken,
-            },
-        });
-        return { accessToken, refreshToken };
+    if (!driver) {
+      throw new UnauthorizedException('Invalid credentials!');
     }
 
-    // You may need to adjust the return type and parameters based on your actual implementation.
-    // The example here assumes you're storing the user ID in the refresh token's payload.
-    async refreshToken(
-        refreshToken: string,
-    ): Promise<{ newAccessToken: string; newRefreshToken: string }> {
-        const validDriver = await this.prismaService.driver.findFirst({
-            where: {
-                OR: [{ refresh_token: refreshToken }],
-            },
-        });
+    const hashedPassword = driver.password;
+    const isValidPassword = await bcrypt.compare(password, hashedPassword);
 
-        if (!validDriver) {
-            throw new NotFoundException('Invalid refresh token!');
-        }
-        const newAccessToken = this.jwtService.sign({ id: validDriver.id });
-        const newRefreshToken = this.generateRefreshToken(); // Implement this method to generate a refresh token and store it securely.
-        await this.prismaService.driver.update({
-            where: { id: validDriver.id },
-            data: {
-                refresh_token: newRefreshToken,
-            },
-        });
-        return { newAccessToken, newRefreshToken };
+    if (!isValidPassword) {
+      throw new HttpException('Invalid credentials!', 400);
     }
 
-    generateRefreshToken(): string {
-        const refreshToken = uuidv4(); // Generate a random UUID as the refresh token
-        // Optionally, you can add an expiration date to the refresh token
-        // Save the refresh token in a secure manner (e.g., in the database) if you plan to implement token rotation.
+    const accessToken = this.jwtService.sign({ id: driver.id });
+    const refreshToken = this.generateRefreshToken(); // Implement this method to generate a refresh token and store it securely.
+    await this.prismaService.driver.update({
+      where: { id: driver.id },
+      data: {
+        refresh_token: refreshToken,
+      },
+    });
+    return { accessToken, refreshToken };
+  }
 
-        return refreshToken;
+  // You may need to adjust the return type and parameters based on your actual implementation.
+  // The example here assumes you're storing the user ID in the refresh token's payload.
+  async refreshToken(
+    refreshToken: string,
+  ): Promise<{ newAccessToken: string; newRefreshToken: string }> {
+    const validDriver = await this.prismaService.driver.findFirst({
+      where: {
+        OR: [{ refresh_token: refreshToken }],
+      },
+    });
+
+    if (!validDriver) {
+      throw new NotFoundException('Invalid refresh token!');
+    }
+    const newAccessToken = this.jwtService.sign({ id: validDriver.id });
+    const newRefreshToken = this.generateRefreshToken(); // Implement this method to generate a refresh token and store it securely.
+    await this.prismaService.driver.update({
+      where: { id: validDriver.id },
+      data: {
+        refresh_token: newRefreshToken,
+      },
+    });
+    return { newAccessToken, newRefreshToken };
+  }
+
+  generateRefreshToken(): string {
+    const refreshToken = uuidv4(); // Generate a random UUID as the refresh token
+    // Optionally, you can add an expiration date to the refresh token
+    // Save the refresh token in a secure manner (e.g., in the database) if you plan to implement token rotation.
+
+    return refreshToken;
+  }
+
+  async addDriverProfilePicture(
+    id: string,
+    file: Express.Multer.File,
+  ): Promise<Driver | null> {
+    const imagePath = await this.imageService.saveImageToCloud(file);
+
+    const driver = await this.prismaService.driver.findUnique({
+      where: { id: id },
+    });
+    if (!driver) {
+      throw new NotFoundException('Driver not found!');
     }
 
-    async addDriverProfilePicture(
-        id: string,
-        imagePath: string,
-    ): Promise<Driver | null> {
-        const driver = await this.prismaService.driver.findUnique({
-            where: { id: id },
-        });
-        if (!driver) {
-            throw new NotFoundException('Driver not found!');
-        }
+    const updatedDriver = await this.prismaService.driver.update({
+      where: { id: id },
+      data: { avatar: imagePath },
+    });
 
-        const updatedDriver = await this.prismaService.driver.update({
-            where: { id: id },
-            data: { avatar: imagePath },
-        });
+    return updatedDriver;
+  }
 
-        return updatedDriver;
+  async updateDriverLocation(
+    id: string,
+    data: DriverLocationUpdateDto,
+  ): Promise<DriverLocation> {
+    const driverExists = await this.prismaService.driver.findUnique({
+      where: { id },
+      include: { driverLocation: true },
+    });
+
+    if (!driverExists) {
+      throw new NotFoundException('Driver not found');
     }
 
-    async updateDriverLocation(
-        id: string,
-        data: DriverLocationUpdateDto,
-    ): Promise<DriverLocation> {
-        const driverExists = await this.prismaService.driver.findUnique({
-            where: { id },
-            include: { driverLocation: true },
-        });
+    const { newLatitude, newLongitude } = data;
+    const driverLocation = driverExists.driverLocation;
 
-        if (!driverExists) {
-            throw new NotFoundException('Driver not found');
-        }
-
-        const { newLatitude, newLongitude } = data;
-        const driverLocation = driverExists.driverLocation;
-
-        if (!driverLocation) {
-            throw new NotFoundException('Driver location not found');
-        }
-
-        const updatedDriverLocation =
-            await this.prismaService.driverLocation.update({
-                where: { id: driverLocation.id },
-                data: {
-                    oldLatitude: driverLocation.newLatitude,
-                    oldLongitude: driverLocation.newLongitude,
-                    newLatitude,
-                    newLongitude,
-                },
-            });
-
-        return updatedDriverLocation;
+    if (!driverLocation) {
+      throw new NotFoundException('Driver location not found');
     }
 
-    async getDriverLocation(id: string) {
-        const driverExists = await this.prismaService.driver.findUnique({
-            where: { id },
-        });
-        if (!driverExists) {
-            throw new NotFoundException('driver not found');
-        }
+    const updatedDriverLocation =
+      await this.prismaService.driverLocation.update({
+        where: { id: driverLocation.id },
+        data: {
+          oldLatitude: driverLocation.newLatitude,
+          oldLongitude: driverLocation.newLongitude,
+          newLatitude,
+          newLongitude,
+        },
+      });
 
-        const updatedDriverLocation =
-            await this.prismaService.driverLocation.findUnique({
-                where: { id: driverExists.driverLocationID },
-            });
+    return updatedDriverLocation;
+  }
 
-        return updatedDriverLocation;
+  async getDriverLocation(id: string) {
+    const driverExists = await this.prismaService.driver.findUnique({
+      where: { id },
+    });
+    if (!driverExists) {
+      throw new NotFoundException('driver not found');
     }
 
-    async addDeviceToken(
-        id: string,
-        deviceToken: string,
-    ): Promise<string | null> {
-        const driver = await this.prismaService.driver.findUnique({
-            where: { id: id },
-        });
-        if (!driver) {
-            throw new NotFoundException('Driver not found!');
-        }
+    const updatedDriverLocation =
+      await this.prismaService.driverLocation.findUnique({
+        where: { id: driverExists.driverLocationID },
+      });
 
-        await this.prismaService.driver.update({
-            where: { id: id },
-            data: { device_token: deviceToken },
-        });
+    return updatedDriverLocation;
+  }
 
-        return deviceToken;
+  async addDeviceToken(id: string, deviceToken: string): Promise<Driver> {
+    const driver = await this.prismaService.driver.findUnique({
+      where: { id: id },
+    });
+    if (!driver) {
+      throw new NotFoundException('Driver not found!');
     }
+
+    await this.prismaService.driver.update({
+      where: { id: id },
+      data: { device_token: deviceToken },
+    });
+
+    return driver;
+  }
 }
