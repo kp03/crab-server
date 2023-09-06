@@ -54,6 +54,14 @@ export class RiderController {
         const userId = req.user.user.id;
         return await this.riderService.createTrip(createTripDto, userId);
     }
+    @ApiBearerAuth()
+    @Header('Authorization', 'Bearer {{token}}')
+    @UseGuards(AuthGuard('jwt'), RiderAuthGuard)
+    @Put('/trips/cancel')
+    async cancelTrip(@Req() req): Promise<{message: string}> {
+        const userId = req.user.user.id;
+        return await this.riderService.cancelTrip(userId);
+    }
 
     @Post('/trip/estimate')
     async getEstimateFare(@Body() requestTripDto: RequestTripDto): Promise<{ fare4Seats: number, fare7Seats: number }> {

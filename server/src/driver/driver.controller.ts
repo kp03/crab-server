@@ -40,12 +40,13 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { v4 as uuidv4 } from 'uuid';
 import * as path from 'path';
-import { Driver } from '@prisma/client';
+import { Driver, Rider, Trip } from '@prisma/client';
 import { join } from 'path';
 import { DriverLocationUpdateDto } from './dtos/driver.location.update.dto';
 import { JwtService } from '@nestjs/jwt';
 import { DriverRefreshTokenDto } from './dtos/driver.refresh.dto';
 import { DriverDeviceTokenDto } from './dtos/driver.devicetoken.dto';
+import { AcceptTripDto } from './dtos/driver.trip.update.dto';
 
 export const storage = {
   storage: diskStorage({
@@ -66,6 +67,17 @@ export class DriverController {
     private driverService: DriverService,
     private readonly jwtService: JwtService,
   ) {}
+
+  @ApiBearerAuth()
+  @Header('Authorization', 'Bearer {{token}}')
+  @UseGuards(AuthGuard('jwt'), DriverAuthGuard)
+  @ApiOperation({ summary: 'Accept a trip' })
+  @Put('trip/')
+  async acceptTrip(@Req() req, @Body() acceptTripDto: AcceptTripDto): Promise<{message: string; trip: Trip; driver: Driver, rider: Rider}>  {
+    const userId = req.user.user.id;
+    var driver = await this.driverService.getDriverById(userId);
+    return await this.driverService.acceptTrip(acceptTripDto, driver.id);
+  }
 
   @ApiBearerAuth()
   @Header('Authorization', 'Bearer {{token}}')

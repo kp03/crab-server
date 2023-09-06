@@ -6,7 +6,7 @@ import {
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
-import { Driver, DriverLocation } from '@prisma/client';
+import { Driver, DriverLocation, Rider } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { DriverCreateDto } from './dtos/driver.create.dto';
 import * as bcrypt from 'bcryptjs';
@@ -16,6 +16,7 @@ import { DriverUpdateDto } from './dtos/driver.update.dto';
 import { DriverLocationUpdateDto } from './dtos/driver.location.update.dto';
 import { v4 as uuidv4 } from 'uuid';
 import { ImageService } from 'src/image/image.service';
+import { AcceptTripDto } from './dtos/driver.trip.update.dto';
 
 @Injectable()
 export class DriverService {
@@ -275,4 +276,66 @@ export class DriverService {
 
     return driver;
   }
+
+  async acceptTrip(acceptTripDto: AcceptTripDto ,id: string){
+
+    const {
+      trip_id,
+      accept,
+    } = acceptTripDto;
+
+    const trip_info = await this.prismaService.trip.findFirst({
+        where: {id: trip_id}
+    });
+    const driver = await this.prismaService.driver.findUnique({
+        where: {id : id},
+    });
+
+    console.log(trip_info);
+    var trip_status = trip_info.status;    
+    var message = "";
+    if (accept == true){
+        if (trip_status == "processing") {
+          await this.prismaService.trip.update({
+            where: {id: trip_id},
+            data: {
+              driverID: driver.id,
+              status: "accepted"
+            }
+          });
+          message = "Trip Accepted";
+        }
+        if (trip_status == "cancel") {
+          message = "Trip Canceled By User"
+        }
+        else {
+          message = "Trip Already Accepted"
+        }
+    } 
+    else {
+      if (trip_status == "processing") {
+        message = "Trip Declined";
+      }
+      if (trip_status == "cancel") {
+        message = "Trip Canceled By User"
+      }
+      else {
+        message = "Trip Already Accepted"
+      }
+    }
+
+    const rider: Rider = await this.prismaService.rider.findUnique({
+      where: { id: trip_info.riderID },
+    });
+
+    // Construct the JSON response
+    const jsonResponse = {
+      message: message,
+      trip: trip_info,
+      driver: driver,
+      rider: rider,
+    };
+    return await jsonResponse;
 }
+}
+

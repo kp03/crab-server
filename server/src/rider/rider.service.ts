@@ -465,6 +465,13 @@ export class RiderService {
 
       //console.log(allDriverTokens);
 
+      const trip_belongs = await this.prismaService.trip.findFirst({
+        where: {riderID: riderExists.id}
+      });
+
+      if (!trip_belongs) {
+        
+      }
       const newTrip = await this.prismaService.trip.create({
         data: {
           status: 'processing',
@@ -502,12 +509,12 @@ export class RiderService {
       //console.log(tripRequestFormat);
 
       // - SEND TO DRIVER
-      await this.notificationService.sendToTokens(
-        'Một chuyến xe mới',
-        'Khách hàng vừa yêu cầu một chuyến xe',
-        tripRequestFormat,
-        allDriverTokens,
-      );
+    //   await this.notificationService.sendToTokens(
+    //     'Một chuyến xe mới',
+    //     'Khách hàng vừa yêu cầu một chuyến xe',
+    //     tripRequestFormat,
+    //     allDriverTokens,
+    //   );
 
       // Construct the JSON response
       const jsonResponse = {
@@ -521,5 +528,30 @@ export class RiderService {
       // Handle errors and return an error response if needed
       throw error; // You can customize error handling here
     }
+  }
+
+  async cancelTrip(id: string){ 
+    const riderExists = await this.prismaService.rider.findUnique({
+        where: { id },
+      });
+
+    const trip_belongs = await this.prismaService.trip.findFirst({
+        where: {riderID: riderExists.id}
+    });
+    var message: string = "";
+    if (trip_belongs && trip_belongs.status != "canceled") {
+        await this.prismaService.trip.update ({
+            where: {id: trip_belongs.id},
+            data : {status: "canceled"}
+        });
+        message = "Trip Canceled"        
+    }
+    else {
+        message = "No trip found";
+    }
+    const jsonResponse = {
+        message: message
+    }
+    return jsonResponse;
   }
 }
