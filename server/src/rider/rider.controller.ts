@@ -189,7 +189,7 @@ export class RiderController {
     @ApiBody({type: RiderDeviceTokenDto})
     @ApiOperation({ summary: "Update driver device token" })
     @Post('profile/deviceToken')
-    async addDeviceToken(@Req() req, @Body() driverDeviceTokenDto: RiderDeviceTokenDto): Promise<string | null> {
+    async addDeviceToken(@Req() req, @Body() driverDeviceTokenDto: RiderDeviceTokenDto): Promise<Rider> {
         const userId = req.user.user.id;        
         return await this.riderService.addDeviceToken(userId, driverDeviceTokenDto.deviceToken);        
     } 

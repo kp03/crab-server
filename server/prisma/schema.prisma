@@ -98,7 +98,7 @@ model Trip {
   riderID     String? 
   rating      Rating?
   driver      Driver?  @relation(fields: [driverID], references: [id])
-  driverID    String?  @unique
+  driverID    String? 
   trip_length Float?
   trip_cost   Float?
   payment     Payment? @relation(fields: [paymentID], references: [id])

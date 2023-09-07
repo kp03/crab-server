@@ -209,11 +209,11 @@ export class RiderService {
   async addDeviceToken(
     id: string,
     deviceToken: string,
-  ): Promise<string | null> {
-    const driver = await this.prismaService.rider.findUnique({
+  ): Promise<Rider> {
+    const rider = await this.prismaService.rider.findUnique({
       where: { id: id },
     });
-    if (!driver) {
+    if (!rider) {
       throw new NotFoundException('Rider not found!');
     }
 
@@ -222,7 +222,7 @@ export class RiderService {
       data: { device_token: deviceToken },
     });
 
-    return deviceToken;
+    return rider;
   }
 
   async updateRiderLocation(
@@ -497,7 +497,7 @@ export class RiderService {
         rider_phone: riderExists.phone,
         rider_avatar: riderExists.avatar ?? '',
         source: source,
-        destination: destination,
+        destination: destination, 
         trip_cost: trip_cost.toString(),
         trip_length: distance.toString(),
         source_lat: startLat.toString(),
@@ -509,12 +509,12 @@ export class RiderService {
       //console.log(tripRequestFormat);
 
       // - SEND TO DRIVER
-    //   await this.notificationService.sendToTokens(
-    //     'Một chuyến xe mới',
-    //     'Khách hàng vừa yêu cầu một chuyến xe',
-    //     tripRequestFormat,
-    //     allDriverTokens,
-    //   );
+      await this.notificationService.sendToTokens(
+        'Một chuyến xe mới',
+        'Khách hàng vừa yêu cầu một chuyến xe',
+        tripRequestFormat,
+        allDriverTokens,
+      );
 
       // Construct the JSON response
       const jsonResponse = {

@@ -73,7 +73,7 @@ export class DriverController {
   @UseGuards(AuthGuard('jwt'), DriverAuthGuard)
   @ApiOperation({ summary: 'Accept a trip' })
   @Put('trip/')
-  async acceptTrip(@Req() req, @Body() acceptTripDto: AcceptTripDto): Promise<{message: string; trip: Trip; driver: Driver, rider: Rider}>  {
+  async acceptTrip(@Req() req, @Body() acceptTripDto: AcceptTripDto): Promise<{status: string; trip: Trip; driver: Driver, rider: Rider}>  {
     const userId = req.user.user.id;
     var driver = await this.driverService.getDriverById(userId);
     return await this.driverService.acceptTrip(acceptTripDto, driver.id);

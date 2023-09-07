@@ -17,6 +17,7 @@ import { DriverLocationUpdateDto } from './dtos/driver.location.update.dto';
 import { v4 as uuidv4 } from 'uuid';
 import { ImageService } from 'src/image/image.service';
 import { AcceptTripDto } from './dtos/driver.trip.update.dto';
+import { NotificationService } from 'src/notification/notification.service';
 
 @Injectable()
 export class DriverService {
@@ -24,6 +25,7 @@ export class DriverService {
     private readonly prismaService: PrismaService,
     private readonly jwtService: JwtService,
     private readonly imageService: ImageService,
+    private readonly notificationService: NotificationService,
   ) {}
 
   async getAllDriver(): Promise<Driver[] | []> {
@@ -277,50 +279,44 @@ export class DriverService {
     return driver;
   }
 
-  async acceptTrip(acceptTripDto: AcceptTripDto ,id: string){
-
-    const {
-      trip_id,
-      accept,
-    } = acceptTripDto;
+  async acceptTrip(acceptTripDto: AcceptTripDto, id: string) {
+    const { trip_id, accept } = acceptTripDto;
 
     const trip_info = await this.prismaService.trip.findFirst({
-        where: {id: trip_id}
+      where: { id: trip_id },
     });
     const driver = await this.prismaService.driver.findUnique({
-        where: {id : id},
+      where: { id: id },
     });
+    //console.log(driver)
 
-    console.log(trip_info);
-    var trip_status = trip_info.status;    
-    var message = "";
-    if (accept == true){
-        if (trip_status == "processing") {
-          await this.prismaService.trip.update({
-            where: {id: trip_id},
-            data: {
-              driverID: driver.id,
-              status: "accepted"
-            }
-          });
-          message = "Trip Accepted";
-        }
-        if (trip_status == "cancel") {
-          message = "Trip Canceled By User"
-        }
-        else {
-          message = "Trip Already Accepted"
-        }
-    } 
-    else {
-      if (trip_status == "processing") {
-        message = "Trip Declined";
+    //console.log(trip_info);
+    var trip_status = trip_info.status;
+    var message = '';
+    if (accept == true) {
+      if (trip_status == 'processing') {
+        await this.prismaService.trip.update({
+          where: { id: trip_id },
+          data: {
+            driverID: driver.id,
+            status: 'accepted',
+          },
+        });
+        message = 'ACCEPTED';
       }
-      if (trip_status == "cancel") {
-        message = "Trip Canceled By User"
+      else if (trip_status == 'cancel') {
+        message = 'CANCELLED';
+      } else {
+        message = 'ALREADY_ACCEPTED';
       }
-      else {
-        message = "Trip Already Accepted"
+    } else {
+      if (trip_status == 'processing') {
+        message = 'Trip Declined';
+      }
+      if (trip_status == 'cancel') {
+        message = 'Trip Canceled By User';
+      } else {
+        message = 'Trip Already Accepted';
       }
     }
 
@@ -328,14 +324,32 @@ export class DriverService {
       where: { id: trip_info.riderID },
     });
 
+    const acceptRequestFormat = {
+      id: trip_info.id,
+      driver_name: driver.name,
+      driver_phone : driver.phone,
+      driver_avatar: driver.avatar ?? "",
+      driver_license: driver.licenseNumber,
+      trip_cost: trip_info.trip_cost.toString(),
+    };
+
+    console.log(acceptRequestFormat)
+
+    // SEND TO CUSTOMER
+    await this.notificationService.sendToTokens(
+      'Đã tìm thấy tài xế !',
+      'Tài xế đang đi đến chỗ của bạn',
+      acceptRequestFormat,
+      [rider.device_token],
+    );
+
     // Construct the JSON response
     const jsonResponse = {
-      message: message,
+      status: message,
       trip: trip_info,
       driver: driver,
       rider: rider,
     };
-    return await jsonResponse;
+    return jsonResponse;
+  }
 }
-}
-
