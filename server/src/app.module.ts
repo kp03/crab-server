@@ -9,12 +9,21 @@ import { DriverModule } from './driver/driver.module';
 import { ImageModule } from './image/image.module';
 import { NotificationModule } from './notification/notification.module';
 import { TripModule } from './trip/trip.module';
-
+import { SocketModule } from './socket/socket.module';
 
 @Module({
-  imports: [PrismaModule, AdminModule, RiderModule, AuthModule, DriverModule, ImageModule, NotificationModule, TripModule],
+  imports: [
+    PrismaModule,
+    AdminModule,
+    RiderModule,
+    AuthModule,
+    DriverModule,
+    ImageModule,
+    NotificationModule,
+    TripModule,
+    SocketModule,
+  ],
   controllers: [AppController],
   providers: [AppService],
 })
 export class AppModule {}
-

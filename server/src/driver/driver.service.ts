@@ -18,6 +18,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { ImageService } from 'src/image/image.service';
 import { AcceptTripDto } from './dtos/driver.trip.update.dto';
 import { NotificationService } from 'src/notification/notification.service';
+import { SocketMessage, SocketService } from 'src/socket/socket.service';
 
 @Injectable()
 export class DriverService {
@@ -26,6 +27,7 @@ export class DriverService {
     private readonly jwtService: JwtService,
     private readonly imageService: ImageService,
     private readonly notificationService: NotificationService,
+    private readonly socketService: SocketService,
   ) {}
 
   async getAllDriver(): Promise<Driver[] | []> {
@@ -303,8 +305,7 @@ export class DriverService {
           },
         });
         message = 'ACCEPTED';
-      }
-      else if (trip_status == 'cancel') {
+      } else if (trip_status == 'cancel') {
         message = 'CANCELLED';
       } else {
         message = 'ALREADY_ACCEPTED';
@@ -327,21 +328,28 @@ export class DriverService {
     const acceptRequestFormat = {
       id: trip_info.id,
       driver_name: driver.name,
-      driver_phone : driver.phone,
-      driver_avatar: driver.avatar ?? "",
+      driver_phone: driver.phone,
+      driver_avatar: driver.avatar ?? '',
       driver_license: driver.licenseNumber,
       trip_cost: trip_info.trip_cost.toString(),
     };
 
-    console.log(acceptRequestFormat)
+    console.log(acceptRequestFormat);
 
     // SEND TO CUSTOMER
-    await this.notificationService.sendToTokens(
-      'Đã tìm thấy tài xế !',
-      'Tài xế đang đi đến chỗ của bạn',
-      acceptRequestFormat,
-      [rider.device_token],
-    );
+    // await this.notificationService.sendToTokens(
+    //   'Đã tìm thấy tài xế !',
+    //   'Tài xế đang đi đến chỗ của bạn',
+    //   acceptRequestFormat,
+    //   [rider.device_token],
+    // );
+
+    const messageSocket: SocketMessage = {
+      roomId: trip_info.id,
+      eventName: 'driver',
+      body: acceptRequestFormat,
+    };
+    this.socketService.sendMessage(messageSocket);
 
     // Construct the JSON response
     const jsonResponse = {

@@ -20,6 +20,7 @@ import axios from 'axios';
 import { CreateTripDto } from './dtos/rider.ride.create.dto';
 import { NotificationService } from 'src/notification/notification.service';
 import { DriverService } from 'src/driver/driver.service';
+import { SocketMessage, SocketService } from 'src/socket/socket.service';
 @Injectable()
 export class RiderService {
   constructor(
@@ -27,6 +28,7 @@ export class RiderService {
     private readonly jwtService: JwtService,
     private readonly notificationService: NotificationService,
     private readonly driverService: DriverService,
+    private readonly socketService: SocketService,
   ) {}
 
   async getAllRider(): Promise<Rider[] | []> {
@@ -206,10 +208,7 @@ export class RiderService {
     return refreshToken;
   }
 
-  async addDeviceToken(
-    id: string,
-    deviceToken: string,
-  ): Promise<Rider> {
+  async addDeviceToken(id: string, deviceToken: string): Promise<Rider> {
     const rider = await this.prismaService.rider.findUnique({
       where: { id: id },
     });
@@ -282,7 +281,7 @@ export class RiderService {
   ): Promise<Driver[] | []> {
     const drivers = await this.prismaService.driver.findMany(); // Fetch all drivers
 
-    //console.log(drivers); 
+    //console.log(drivers);
 
     if (drivers.length === 0) {
       return []; // No drivers available
@@ -422,7 +421,7 @@ export class RiderService {
   async createTrip(
     createTripDto: CreateTripDto,
     id: string,
-  ): Promise<{ message: string; trip: Trip; rider: Rider }> {
+  ): Promise<{ message: string; trip: Trip }> {
     try {
       const riderExists = await this.prismaService.rider.findUnique({
         where: { id },
@@ -459,18 +458,18 @@ export class RiderService {
 
       // get neareast driver
       const allDriver = await this.findNearestDrivers(startLat, startLong, 5);
-      const allDriverTokens = allDriver.map(
-        (driver: Driver) => driver.device_token,
-      );
+      // const allDriverTokens = allDriver.map(
+      //   (driver: Driver) => driver.device_token,
+      // );
+      const allDriverIds = allDriver.map((driver: Driver) => driver.id);
 
       //console.log(allDriverTokens);
 
       const trip_belongs = await this.prismaService.trip.findFirst({
-        where: {riderID: riderExists.id}
+        where: { riderID: riderExists.id },
       });
 
       if (!trip_belongs) {
-        
       }
       const newTrip = await this.prismaService.trip.create({
         data: {
@@ -497,7 +496,7 @@ export class RiderService {
         rider_phone: riderExists.phone,
         rider_avatar: riderExists.avatar ?? '',
         source: source,
-        destination: destination, 
+        destination: destination,
         trip_cost: trip_cost.toString(),
         trip_length: distance.toString(),
         source_lat: startLat.toString(),
@@ -509,18 +508,25 @@ export class RiderService {
       //console.log(tripRequestFormat);
 
       // - SEND TO DRIVER
-      await this.notificationService.sendToTokens(
-        'Một chuyến xe mới',
-        'Khách hàng vừa yêu cầu một chuyến xe',
-        tripRequestFormat,
-        allDriverTokens,
-      );
+      // await this.notificationService.sendToTokens(
+      //   'Một chuyến xe mới',
+      //   'Khách hàng vừa yêu cầu một chuyến xe',
+      //   tripRequestFormat,
+      //   allDriverTokens,
+      // );
+
+      // - USING SOCKET
+      const message: SocketMessage = {
+        roomId: allDriverIds,
+        eventName: 'trip-request',
+        body: tripRequestFormat,
+      };
+      this.socketService.sendMessage(message);
 
       // Construct the JSON response
       const jsonResponse = {
         message: 'Trip created successfully',
         trip: newTrip,
-        rider: riderExists,
       };
 
       return jsonResponse;
@@ -530,28 +536,27 @@ export class RiderService {
     }
   }
 
-  async cancelTrip(id: string){ 
+  async cancelTrip(id: string) {
     const riderExists = await this.prismaService.rider.findUnique({
-        where: { id },
-      });
+      where: { id },
+    });
 
     const trip_belongs = await this.prismaService.trip.findFirst({
-        where: {riderID: riderExists.id}
+      where: { riderID: riderExists.id },
     });
-    var message: string = "";
-    if (trip_belongs && trip_belongs.status != "canceled") {
-        await this.prismaService.trip.update ({
-            where: {id: trip_belongs.id},
-            data : {status: "canceled"}
-        });
-        message = "Trip Canceled"        
-    }
-    else {
-        message = "No trip found";
+    var message: string = '';
+    if (trip_belongs && trip_belongs.status != 'canceled') {
+      await this.prismaService.trip.update({
+        where: { id: trip_belongs.id },
+        data: { status: 'canceled' },
+      });
+      message = 'Trip Canceled';
+    } else {
+      message = 'No trip found';
     }
     const jsonResponse = {
-        message: message
-    }
+      message: message,
+    };
     return jsonResponse;
   }
 }

@@ -9,13 +9,15 @@ import { AdminAuthGuard, RiderAuthGuard, RoleAuthGuard } from 'src/auth/role.aut
 import { AuthModule } from 'src/auth/auth.module';
 import { NotificationModule } from 'src/notification/notification.module';
 import { DriverModule } from 'src/driver/driver.module';
+import { SocketModule } from 'src/socket/socket.module';
 
 @Module({
   imports: [    
     ConfigModule,
     AuthModule,
     NotificationModule,
-    DriverModule
+    DriverModule,
+    SocketModule
   ],
   controllers: [RiderController],
   providers: [RiderService, PrismaService, AdminAuthGuard, RoleAuthGuard, RiderAuthGuard],

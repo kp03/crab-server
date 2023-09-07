@@ -5,11 +5,18 @@ import { PrismaModule } from 'src/prisma/prisma.module';
 import { AuthModule } from 'src/auth/auth.module';
 import { ImageModule } from 'src/image/image.module';
 import { NotificationModule } from 'src/notification/notification.module';
+import { SocketModule } from 'src/socket/socket.module';
 
 @Module({
-  imports: [PrismaModule, AuthModule,ImageModule,NotificationModule],
+  imports: [
+    PrismaModule,
+    AuthModule,
+    ImageModule,
+    NotificationModule,
+    SocketModule,
+  ],
   providers: [DriverService, Logger],
   controllers: [DriverController],
-  exports : [DriverService]
+  exports: [DriverService],
 })
 export class DriverModule {}

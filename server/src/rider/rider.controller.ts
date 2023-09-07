@@ -50,7 +50,7 @@ export class RiderController {
     @Header('Authorization', 'Bearer {{token}}')
     @UseGuards(AuthGuard('jwt'), RiderAuthGuard)
     @Post('/trips/')
-    async createTrip(@Req() req, @Body() createTripDto: CreateTripDto): Promise<{message: string; trip: Trip; rider: Rider}> {
+    async createTrip(@Req() req, @Body() createTripDto: CreateTripDto): Promise<{message: string; trip: Trip}> {
         const userId = req.user.user.id;
         return await this.riderService.createTrip(createTripDto, userId);
     }
