@@ -5,22 +5,32 @@ import { RiderController } from './rider.controller';
 import { RiderService } from './rider.service';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { PassportModule } from '@nestjs/passport';
-import { AdminAuthGuard, RiderAuthGuard, RoleAuthGuard } from 'src/auth/role.auth.guard';
+import {
+  AdminAuthGuard,
+  RiderAuthGuard,
+  RoleAuthGuard,
+} from 'src/auth/role.auth.guard';
 import { AuthModule } from 'src/auth/auth.module';
 import { NotificationModule } from 'src/notification/notification.module';
 import { DriverModule } from 'src/driver/driver.module';
 import { SocketModule } from 'src/socket/socket.module';
 
 @Module({
-  imports: [    
+  imports: [
     ConfigModule,
     AuthModule,
     NotificationModule,
     DriverModule,
-    SocketModule
+    SocketModule,
   ],
   controllers: [RiderController],
-  providers: [RiderService, PrismaService, AdminAuthGuard, RoleAuthGuard, RiderAuthGuard],
+  providers: [
+    RiderService,
+    PrismaService,
+    AdminAuthGuard,
+    RoleAuthGuard,
+    RiderAuthGuard,
+  ],
   exports: [],
 })
 export class RiderModule {}

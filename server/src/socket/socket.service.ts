@@ -12,6 +12,13 @@ export interface JoinRoomMessage{
     roomId : string,
 }
 
+export interface DriverLocationMessage{
+  roomId? : string
+  lat : number
+  long : number
+}
+
+
 @Injectable()
 export class SocketService {
   private event = new Subject<SocketMessage>();

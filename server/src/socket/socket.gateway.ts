@@ -10,10 +10,16 @@ import {
 } from '@nestjs/websockets';
 import { Server } from 'socket.io';
 import {
+  DriverLocationMessage,
   JoinRoomMessage,
   SocketMessage,
   SocketService,
 } from './socket.service';
+import {
+  MediatorListener,
+  MediatorService,
+} from 'src/mediator/mediator.service';
+import { DriverService } from 'src/driver/driver.service';
 
 @WebSocketGateway(8443, {
   cors: {
@@ -23,7 +29,10 @@ import {
 export class SockeyGateway
   implements OnGatewayConnection, OnGatewayDisconnect, OnGatewayInit
 {
-  constructor(private socketService: SocketService) {}
+  constructor(
+    private socketService: SocketService,
+    private readonly driverService: DriverService,
+  ) {}
 
   @WebSocketServer()
   server: Server;
@@ -62,6 +71,7 @@ export class SockeyGateway
     @ConnectedSocket() client: any,
     @MessageBody() body: JoinRoomMessage,
   ) {
+    console.log(`${client.user.id} join room : ${body.roomId}`);
 
     client.join(body.roomId);
 
@@ -71,10 +81,24 @@ export class SockeyGateway
   @SubscribeMessage('driver-location')
   sendMessageFromClient(
     @ConnectedSocket() client: any,
-    @MessageBody() body: any,
+    @MessageBody() body: DriverLocationMessage,
   ) {
     console.log(body);
 
-    // - TODO driver send location and send to customer (rider)
+    // this.mediatorService.send(
+    //   MediatorListener.DRIVER_LOCATION_SAVED,
+    //   savingLocation,
+    // );
+    this.driverService.updateDriverLocation(client.user.id, {
+      newLatitude: body.lat,
+      newLongitude: body.long,
+    });
+
+    if (body.roomId) {
+      console.log(
+        `${client.user.id} send to ${body.roomId} : {${body.lat},${body.long}}`,
+      );
+      //this.sendToClient(body.roomId, 'driver_location', body);
+    }
   }
 }
