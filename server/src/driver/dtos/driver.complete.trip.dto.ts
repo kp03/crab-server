@@ -10,5 +10,5 @@ export class CompletedTripDto{
 
     @ApiProperty({ example: 'true' })
     @IsNotEmpty()
-    complete: boolean;
+    completed: boolean;
 }

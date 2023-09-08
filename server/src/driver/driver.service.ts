@@ -378,14 +378,15 @@ export class DriverService {
 
     let message = '';
     var trip_status = trip_info.status;
-    if (completedTripDto.complete == true) {
+    if (completedTripDto.completed == true) {
       if (trip_status == 'accepted') {
         await this.prismaService.trip.update({
           where: { id: completedTripDto.trip_id },
           data: {
             status: 'completed',
           },
-        }); 
+        });
+        message = 'trip completed';
       }
     }
 
