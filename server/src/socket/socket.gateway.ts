@@ -11,6 +11,7 @@ import {
 import { Server } from 'socket.io';
 import {
   DriverLocationMessage,
+  DriverStateMessage,
   JoinRoomMessage,
   SocketMessage,
   SocketService,
@@ -50,7 +51,7 @@ export class SockeyGateway
       });
   }
 
-  sendToClient(clientId: string, eventName: string, data: any) {
+  sendToClient(clientId: string | string[], eventName: string, data: any) {
     this.server.to(clientId).emit(eventName, data);
   }
 
@@ -83,12 +84,7 @@ export class SockeyGateway
     @ConnectedSocket() client: any,
     @MessageBody() body: DriverLocationMessage,
   ) {
-    console.log(body);
-
-    // this.mediatorService.send(
-    //   MediatorListener.DRIVER_LOCATION_SAVED,
-    //   savingLocation,
-    // );
+    
     this.driverService.updateDriverLocation(client.user.id, {
       newLatitude: body.lat,
       newLongitude: body.long,
@@ -98,7 +94,15 @@ export class SockeyGateway
       console.log(
         `${client.user.id} send to ${body.roomId} : {${body.lat},${body.long}}`,
       );
-      //this.sendToClient(body.roomId, 'driver_location', body);
+      this.sendToClient(body.roomId, 'driver-location', body);
     }
+  }
+
+  @SubscribeMessage('trip')
+  updateTrip(
+    @ConnectedSocket() client: any,
+    @MessageBody() body: DriverStateMessage,
+  ) {
+    this.sendToClient(body.roomId, 'trip', {state : body.state});
   }
 }

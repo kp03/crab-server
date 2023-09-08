@@ -550,6 +550,21 @@ export class RiderService {
         where: { id: trip_belongs.id },
         data: { status: 'canceled' },
       });
+
+
+      // if(trip_belongs.driverID){
+      //   const messageSocket : SocketMessage = {
+      //     roomId: trip_belongs.driverID,
+      //     eventName: '',
+      //     body: undefined
+      //   }
+      //   this.socketService.sendMessage()
+      // }
+
+
+
+
+
       message = 'Trip Canceled';
     } else {
       message = 'No trip found';

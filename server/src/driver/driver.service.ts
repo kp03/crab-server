@@ -20,6 +20,7 @@ import { AcceptTripDto } from './dtos/driver.trip.update.dto';
 import { NotificationService } from 'src/notification/notification.service';
 import { SocketMessage, SocketService } from 'src/socket/socket.service';
 import { MediatorService } from 'src/mediator/mediator.service';
+import { CompletedTripDto } from './dtos/driver.complete.trip.dto';
 
 @Injectable()
 export class DriverService {
@@ -291,6 +292,8 @@ export class DriverService {
     const driver = await this.prismaService.driver.findUnique({
       where: { id: id },
     });
+    const driverCurrentLocation = await this.getDriverLocation(id);
+
     //console.log(driver)
 
     //console.log(trip_info);
@@ -327,12 +330,18 @@ export class DriverService {
     });
 
     const acceptRequestFormat = {
-      id: trip_info.id,
-      driver_name: driver.name,
-      driver_phone: driver.phone,
-      driver_avatar: driver.avatar ?? '',
-      driver_license: driver.licenseNumber,
-      trip_cost: trip_info.trip_cost.toString(),
+      driver: {
+        id: trip_info.id,
+        driver_name: driver.name,
+        driver_phone: driver.phone,
+        driver_avatar: driver.avatar ?? '',
+        driver_license: driver.licenseNumber,
+        trip_cost: trip_info.trip_cost.toString(),
+      },
+      location: {
+        lat: driverCurrentLocation.newLatitude,
+        long: driverCurrentLocation.newLongitude,
+      },
     };
 
     console.log(acceptRequestFormat);
@@ -358,6 +367,42 @@ export class DriverService {
       trip: trip_info,
       driver: driver,
       rider: rider,
+    };
+    return jsonResponse;
+  }
+
+  async completeTrip(completedTripDto: CompletedTripDto, id: string) {
+    const trip_info = await this.prismaService.trip.findFirst({
+      where: { id: completedTripDto.trip_id },
+    });
+
+    let message = '';
+    var trip_status = trip_info.status;
+    if (completedTripDto.complete == true) {
+      if (trip_status == 'accepted') {
+        await this.prismaService.trip.update({
+          where: { id: completedTripDto.trip_id },
+          data: {
+            status: 'completed',
+          },
+        }); 
+      }
+    }
+
+    const notifyCustomer = {
+      state: 'ARRIVED_DES',
+    };
+
+    const messageSocket: SocketMessage = {
+      roomId: trip_info.id,
+      eventName: 'trip',
+      body: notifyCustomer,
+    };
+    this.socketService.sendMessage(messageSocket);
+
+    const jsonResponse = {
+      status: message,
+      trip: trip_info,
     };
     return jsonResponse;
   }
