@@ -47,6 +47,7 @@ import { JwtService } from '@nestjs/jwt';
 import { DriverRefreshTokenDto } from './dtos/driver.refresh.dto';
 import { DriverDeviceTokenDto } from './dtos/driver.devicetoken.dto';
 import { AcceptTripDto } from './dtos/driver.trip.update.dto';
+import { CompletedTripDto } from './dtos/driver.complete.trip.dto';
 
 export const storage = {
   storage: diskStorage({
@@ -77,6 +78,17 @@ export class DriverController {
     const userId = req.user.user.id;
     var driver = await this.driverService.getDriverById(userId);
     return await this.driverService.acceptTrip(acceptTripDto, driver.id);
+  }
+
+  @ApiBearerAuth()
+  @Header('Authorization', 'Bearer {{token}}')
+  @UseGuards(AuthGuard('jwt'), DriverAuthGuard)
+  @ApiOperation({ summary: 'Accept a trip' })
+  @Put('trip/complete')
+  async completeTrip(@Req() req, @Body() completeTripDto: CompletedTripDto)  {
+    const userId = req.user.user.id;
+    var driver = await this.driverService.getDriverById(userId);
+    return await this.driverService.completeTrip(completeTripDto, driver.id);
   }
 
   @ApiBearerAuth()
