@@ -21,6 +21,7 @@ import { CreateTripDto } from './dtos/rider.ride.create.dto';
 import { NotificationService } from 'src/notification/notification.service';
 import { DriverService } from 'src/driver/driver.service';
 import { SocketMessage, SocketService } from 'src/socket/socket.service';
+import { CreateTripByCallDto } from './dtos/rider.ride.create.call.dto';
 @Injectable()
 export class RiderService {
   constructor(
@@ -536,6 +537,103 @@ export class RiderService {
     }
   }
 
+  // tạo chuyến thông qua tổng đài
+  // không có địa chỉ kết thúc, distance, duration
+  // ! Chưa test
+  async createTripByCall(
+    createTripDto: CreateTripByCallDto,
+    id: string,
+  ): Promise<{ message: string; trip: Trip }> {
+    try {
+      const riderExists = await this.prismaService.rider.findUnique({
+        where: { id },
+      });
+
+      //console.log(riderExists);
+
+      if (!riderExists) {
+        console.log(riderExists);
+        throw new NotFoundException('Rider not found');
+      }
+
+      const { startLat, startLong, source, phone, name, cabSeats } =
+        createTripDto;
+
+      // get neareast driver
+      const allDriver = await this.findNearestDrivers(startLat, startLong, 5);
+      // const allDriverTokens = allDriver.map(
+      //   (driver: Driver) => driver.device_token,
+      // );
+      const allDriverIds = allDriver.map((driver: Driver) => driver.id);
+
+      //console.log(allDriverTokens);
+
+      const trip_belongs = await this.prismaService.trip.findFirst({
+        where: { riderID: riderExists.id },
+      });
+
+      if (!trip_belongs) {
+      }
+      const newTrip = await this.prismaService.trip.create({
+        data: {
+          status: 'processing',
+          sourceLat: startLat,
+          sourceLong: startLong,
+          source: source,
+          destLat: 0.0,
+          destLong: 0,
+          destination: '',
+          cabSeats: cabSeats,
+          trip_cost: 0,
+          trip_length: 0,
+          distance: 0,
+          riderID: id,
+          date: new Date().toISOString(), // Convert to ISO 8601 format
+        },
+      });
+
+      const tripRequestFormat = {
+        id: newTrip.id,
+        rider_id: newTrip.riderID,
+        rider_name: riderExists.name,
+        rider_phone: riderExists.phone,
+        rider_avatar: riderExists.avatar ?? '',
+        source: source,
+        source_lat: startLat.toString(),
+        source_long: startLong.toString(),
+      };
+
+      //console.log(tripRequestFormat);
+
+      // - SEND TO DRIVER
+      // await this.notificationService.sendToTokens(
+      //   'Một chuyến xe mới',
+      //   'Khách hàng vừa yêu cầu một chuyến xe',
+      //   tripRequestFormat,
+      //   allDriverTokens,
+      // );
+
+      // - USING SOCKET
+      const message: SocketMessage = {
+        roomId: allDriverIds,
+        eventName: 'trip-request-call',
+        body: tripRequestFormat,
+      };
+      this.socketService.sendMessage(message);
+
+      // Construct the JSON response
+      const jsonResponse = {
+        message: 'Trip created successfully',
+        trip: newTrip,
+      };
+
+      return jsonResponse;
+    } catch (error) {
+      // Handle errors and return an error response if needed
+      throw error; // You can customize error handling here
+    }
+  }
+
   async cancelTrip(id: string) {
     const riderExists = await this.prismaService.rider.findUnique({
       where: { id },
@@ -551,7 +649,6 @@ export class RiderService {
         data: { status: 'canceled' },
       });
 
-
       // if(trip_belongs.driverID){
       //   const messageSocket : SocketMessage = {
       //     roomId: trip_belongs.driverID,
@@ -560,10 +657,6 @@ export class RiderService {
       //   }
       //   this.socketService.sendMessage()
       // }
-
-
-
-
 
       message = 'Trip Canceled';
     } else {
