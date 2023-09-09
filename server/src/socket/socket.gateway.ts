@@ -77,7 +77,7 @@ export class SockeyGateway
     client.join(body.roomId);
 
     // - TODO join room
-  }
+  } 
 
   @SubscribeMessage('driver-location')
   sendMessageFromClient(
@@ -91,9 +91,9 @@ export class SockeyGateway
     });
 
     if (body.roomId) {
-      console.log(
-        `${client.user.id} send to ${body.roomId} : {${body.lat},${body.long}}`,
-      );
+      // console.log(
+      //   `${client.user.id} send to ${body.roomId} : {${body.lat},${body.long}}`,
+      // );
       this.sendToClient(body.roomId, 'driver-location', body);
     }
   }
