@@ -541,21 +541,9 @@ export class RiderService {
   // không có địa chỉ kết thúc, distance, duration
   // ! Chưa test
   async createTripByCall(
-    createTripDto: CreateTripByCallDto,
-    id: string,
+    createTripDto: CreateTripByCallDto
   ): Promise<{ message: string; trip: Trip }> {
     try {
-      const riderExists = await this.prismaService.rider.findUnique({
-        where: { id },
-      });
-
-      //console.log(riderExists);
-
-      if (!riderExists) {
-        console.log(riderExists);
-        throw new NotFoundException('Rider not found');
-      }
-
       const { startLat, startLong, source, phone, name, cabSeats } =
         createTripDto;
 
@@ -568,12 +556,6 @@ export class RiderService {
 
       //console.log(allDriverTokens);
 
-      const trip_belongs = await this.prismaService.trip.findFirst({
-        where: { riderID: riderExists.id },
-      });
-
-      if (!trip_belongs) {
-      }
       const newTrip = await this.prismaService.trip.create({
         data: {
           status: 'processing',
@@ -587,17 +569,14 @@ export class RiderService {
           trip_cost: 0,
           trip_length: 0,
           distance: 0,
-          riderID: id,
           date: new Date().toISOString(), // Convert to ISO 8601 format
         },
       });
 
       const tripRequestFormat = {
         id: newTrip.id,
-        rider_id: newTrip.riderID,
-        rider_name: riderExists.name,
-        rider_phone: riderExists.phone,
-        rider_avatar: riderExists.avatar ?? '',
+        rider_name: name,
+        rider_phone: phone,
         source: source,
         source_lat: startLat.toString(),
         source_long: startLong.toString(),
