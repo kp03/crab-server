@@ -325,9 +325,6 @@ export class DriverService {
       }
     }
 
-    const rider: Rider = await this.prismaService.rider.findUnique({
-      where: { id: trip_info.riderID },
-    });
 
     const acceptRequestFormat = {
       driver: {
@@ -366,7 +363,7 @@ export class DriverService {
       status: message,
       trip: trip_info,
       driver: driver,
-      rider: rider,
+      
     };
     return jsonResponse;
   }
