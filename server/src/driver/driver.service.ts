@@ -36,6 +36,10 @@ export class DriverService {
     return this.prismaService.driver.findMany();
   }
 
+  async getTotalDrivers(): Promise< Number > {
+    return this.prismaService.driver.count();
+  }
+
   async getDriverById(id: string): Promise<Driver | null> {
     const driver: Driver = await this.prismaService.driver.findUnique({
       where: { id },

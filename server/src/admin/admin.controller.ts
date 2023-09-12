@@ -12,6 +12,9 @@ import { v4 as uuidv4 } from 'uuid'
 import * as path from 'path';
 import { Admin } from '@prisma/client';
 import { join } from 'path';
+import { DriverService } from 'src/driver/driver.service';
+import { RiderService } from 'src/rider/rider.service';
+import { TripService } from 'src/trip/trip.service';
 
 
 export const storage = {
@@ -28,7 +31,7 @@ export const storage = {
 @ApiTags('admin')
 @Controller('admin')
 export class AdminController {
-    constructor(private adminService: AdminService) { }
+    constructor(private adminService: AdminService, private driverService: DriverService, private riderService: RiderService, private tripService: TripService) { }
 
     // GET ALL ADMIN
     @ApiBearerAuth()
@@ -116,4 +119,27 @@ export class AdminController {
         return res.sendFile(join(process.cwd(), 'uploads/admin/profileimages/' + admin.avatar));
     }
 
+    @Get('total/drivers')
+    async getTotalDriver() {
+        const totalDrivers = await this.driverService.getTotalDrivers();
+        return { totalDrivers }
+    }
+
+    @Get('total/riders')
+    async getTotalRider() {
+        const totalRiders = await this.riderService.getTotalRider();
+        return { totalRiders }
+    }
+
+    @Get('total/trips')
+    async getTotalTrip() {
+        const totalTrips = await this.tripService.getTripTotal();
+        return { totalTrips };
+    }
+
+    @Get('total/revenue')
+    async getTotalRevenue() {
+        const totalRevenue = await this.tripService.getTotalRevenue();
+        return { totalRevenue };
+    }
 }

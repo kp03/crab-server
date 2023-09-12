@@ -646,4 +646,8 @@ export class RiderService {
     };
     return jsonResponse;
   }
+
+  async getTotalRider() {
+    return this.prismaService.rider.count();
+  }
 }

@@ -31,6 +31,6 @@ import { SocketModule } from 'src/socket/socket.module';
     RoleAuthGuard,
     RiderAuthGuard,
   ],
-  exports: [],
+  exports: [RiderService],
 })
 export class RiderModule {}
