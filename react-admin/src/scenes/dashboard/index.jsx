@@ -1,17 +1,14 @@
-import { Box, Button, IconButton, Typography, useTheme } from "@mui/material";
-import { tokens } from "../../theme";
-import { mockTransactions } from "../../data/mockData";
 import DownloadOutlinedIcon from "@mui/icons-material/DownloadOutlined";
 import DriverIcon from "@mui/icons-material/DriveEta";
-import PointOfSaleIcon from "@mui/icons-material/PointOfSale";
 import PersonAddIcon from "@mui/icons-material/PersonAdd";
-import TrafficIcon from "@mui/icons-material/Traffic";
+import PointOfSaleIcon from "@mui/icons-material/PointOfSale";
+import { Box, IconButton, Typography, useTheme } from "@mui/material";
+import { useNavigate } from "react-router-dom";
 import Header from "../../components/Header";
 import LineChart from "../../components/LineChart";
-import GeographyChart from "../../components/GeographyChart";
-import BarChart from "../../components/BarChart";
 import StatBox from "../../components/StatBox";
-import ProgressCircle from "../../components/ProgressCircle";
+import { mockTransactions } from "../../data/mockData";
+import { tokens } from "../../theme";
 
 const Dashboard = () => {
   const theme = useTheme();
