@@ -1,11 +1,12 @@
-import { Box, Typography, useTheme } from "@mui/material";
-import { DataGrid } from "@mui/x-data-grid";
-import { tokens } from "../../theme";
-import { mockDataTeam } from "../../data/mockData";
 import AdminPanelSettingsOutlinedIcon from "@mui/icons-material/AdminPanelSettingsOutlined";
 import LockOpenOutlinedIcon from "@mui/icons-material/LockOpenOutlined";
-import SecurityOutlinedIcon from "@mui/icons-material/SecurityOutlined";
+import { Box, Typography, useTheme } from "@mui/material";
+import { DataGrid } from "@mui/x-data-grid";
+import { useEffect, useState } from "react";
 import Header from "../../components/Header";
+import { mockDataTeam } from "../../data/mockData";
+import { tokens } from "../../theme";
+import axiosClient from "../../config/axiosClient";
 
 const Team = () => {
   const theme = useTheme();
@@ -19,13 +20,6 @@ const Team = () => {
       cellClassName: "name-column--cell",
     },
     {
-      field: "age",
-      headerName: "Age",
-      type: "number",
-      headerAlign: "left",
-      align: "left",
-    },
-    {
       field: "phone",
       headerName: "Phone Number",
       flex: 1,
@@ -36,10 +30,22 @@ const Team = () => {
       flex: 1,
     },
     {
-      field: "accessLevel",
-      headerName: "Access Level",
+      field: "cabSeats",
+      headerName: "Car Type",
       flex: 1,
-      renderCell: ({ row: { access } }) => {
+    },
+    {
+      field: "status",
+      headerName: "Status",
+      flex: 1,
+    },
+    {
+      field: "verified",
+      headerName: "verified",
+      align: "center",
+      headerAlign: "center",
+      flex: 1,
+      renderCell: ({ row: { verified } }) => {
         return (
           <Box
             width="60%"
@@ -48,19 +54,17 @@ const Team = () => {
             display="flex"
             justifyContent="center"
             backgroundColor={
-              access === "admin"
-                ? colors.greenAccent[600]
-                : access === "manager"
-                ? colors.greenAccent[700]
-                : colors.greenAccent[700]
+              verified ? colors.greenAccent[600] : colors.redAccent[700]
             }
             borderRadius="4px"
           >
-            {access === "admin" && <AdminPanelSettingsOutlinedIcon />}
-            {access === "manager" && <SecurityOutlinedIcon />}
-            {access === "user" && <LockOpenOutlinedIcon />}
+            {verified ? (
+              <AdminPanelSettingsOutlinedIcon />
+            ) : (
+              <LockOpenOutlinedIcon />
+            )}
             <Typography color={colors.grey[100]} sx={{ ml: "5px" }}>
-              {access}
+              {verified ? "verified" : "waiting"}
             </Typography>
           </Box>
         );
@@ -68,9 +72,23 @@ const Team = () => {
     },
   ];
 
+  const [data, setData] = useState([]);
+
+  useEffect(() => {
+    const getData = async () => {
+      try {
+        const driverData = await axiosClient.get(`/driver`);
+        setData(driverData);
+      } catch (error) {
+        console.log(error);
+      }
+    };
+    getData();
+  }, []);
+
   return (
-    <Box m="20px">
-      <Header title="TEAM" subtitle="Managing the Team Members" />
+    <Box m="0px 32px">
+      <Header title="Drivers" subtitle="Managing the Drivers" />
       <Box
         m="40px 0 0 0"
         height="75vh"
@@ -100,7 +118,7 @@ const Team = () => {
           },
         }}
       >
-        <DataGrid checkboxSelection rows={mockDataTeam} columns={columns} />
+        <DataGrid checkboxSelection rows={data} columns={columns} />
       </Box>
     </Box>
   );
