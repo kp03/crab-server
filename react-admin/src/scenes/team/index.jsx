@@ -78,7 +78,7 @@ const Team = () => {
     const getData = async () => {
       try {
         const driverData = await axiosClient.get(`/driver`);
-        setData(driverData);
+        setData(driverData.data);
       } catch (error) {
         console.log(error);
       }

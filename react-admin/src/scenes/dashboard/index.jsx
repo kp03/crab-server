@@ -41,13 +41,13 @@ const Dashboard = () => {
     const getData = async () => {
       try {
         const numDrivers = await axiosClient.get(`/admin/total/drivers`);
-        setNumDrivers(numDrivers.totalDrivers);
+        setNumDrivers(numDrivers.data.totalDrivers);
         const numRiders = await axiosClient.get(`/admin/total/riders`);
-        setNumRiders(numRiders.totalRiders);
+        setNumRiders(numRiders.data.totalRiders);
         const numTrips = await axiosClient.get(`/admin/total/trips`);
-        setNumTrips(numTrips.totalTrips);
+        setNumTrips(numTrips.data.totalTrips);
         const resRevenue = await axiosClient.get(`/admin/total/revenue`);
-        setRevenue(resRevenue.totalRevenue);
+        setRevenue(resRevenue.data.totalRevenue);
       } catch (error) {
         console.log(error);
       }

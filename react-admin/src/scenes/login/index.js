@@ -20,9 +20,13 @@ const Login = () => {
             password: data.get("password"),
         });
 
-        const res = await axiosClient.post('/login')
-        if (res.token) {
-            setToken(res.token)
+        const res = await axiosClient.post('/admin/login', {
+            phone: data.get("phone"),
+            password: data.get("password"),
+        })
+        console.log(res)
+        if (res.data.token) {
+            setToken(res.data.token)
             navigate("/");
         }
 

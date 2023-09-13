@@ -51,7 +51,7 @@ async function bootstrap() {
     }),
   );
   app.useWebSocketAdapter(new AuthenticatedSocketAdapter(app));
-
+  app.enableCors();
   await app.listen(4000);
 }
 bootstrap();
