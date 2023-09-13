@@ -5,13 +5,14 @@ import Header from "../../components/Header";
 import { tokens } from "../../theme";
 import { useAppStore } from "../../store/appStore";
 import { useNavigate } from "react-router-dom";
+import axiosClient from "../../config/axiosClient";
 
 const Login = () => {
     const navigate = useNavigate();
     const theme = useTheme();
     const colors = tokens(theme.palette.mode);
     const { setToken } = useAppStore(state => state)
-    const handleSubmit = (event) => {
+    const handleSubmit = async (event) => {
         event.preventDefault();
         const data = new FormData(event.currentTarget);
         console.log({
@@ -19,9 +20,12 @@ const Login = () => {
             password: data.get("password"),
         });
 
-        //const res = await login... 
-        setToken('Hello')
-        navigate("/");
+        const res = await axiosClient.post('/login')
+        if (res.token) {
+            setToken(res.token)
+            navigate("/");
+        }
+
     };
     return (
         <Box>
