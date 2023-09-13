@@ -1,4 +1,5 @@
 import { tokens } from "../theme";
+import dayjs from 'dayjs';
 
 export const mockDataTeam = [
   {
@@ -7,7 +8,7 @@ export const mockDataTeam = [
     email: "jonsnow@gmail.com",
     age: 35,
     phone: "(665)121-5454",
-    access: "admin",
+    verified: true
   },
   {
     id: 2,
@@ -15,7 +16,7 @@ export const mockDataTeam = [
     email: "cerseilannister@gmail.com",
     age: 42,
     phone: "(421)314-2288",
-    access: "manager",
+    verified: true
   },
   {
     id: 3,
@@ -31,7 +32,7 @@ export const mockDataTeam = [
     email: "anyastark@gmail.com",
     age: 16,
     phone: "(921)425-6742",
-    access: "admin",
+    verified: true
   },
   {
     id: 5,
@@ -47,7 +48,7 @@ export const mockDataTeam = [
     email: "evermelisandre@gmail.com",
     age: 150,
     phone: "(232)545-6483",
-    access: "manager",
+    verified: true
   },
   {
     id: 7,
@@ -71,7 +72,7 @@ export const mockDataTeam = [
     email: "harveyroxie@gmail.com",
     age: 65,
     phone: "(444)555-6239",
-    access: "admin",
+    verified: true
   },
 ];
 
@@ -430,170 +431,66 @@ export const mockPieData = [
   },
 ];
 
-export const mockLineData = [
-  {
-    id: "japan",
-    color: tokens("dark").greenAccent[500],
-    data: [
-      {
-        x: "plane",
-        y: 101,
-      },
-      {
-        x: "helicopter",
-        y: 75,
-      },
-      {
-        x: "boat",
-        y: 36,
-      },
-      {
-        x: "train",
-        y: 216,
-      },
-      {
-        x: "subway",
-        y: 35,
-      },
-      {
-        x: "bus",
-        y: 236,
-      },
-      {
-        x: "car",
-        y: 88,
-      },
-      {
-        x: "moto",
-        y: 232,
-      },
-      {
-        x: "bicycle",
-        y: 281,
-      },
-      {
-        x: "horse",
-        y: 1,
-      },
-      {
-        x: "skateboard",
-        y: 35,
-      },
-      {
-        x: "others",
-        y: 14,
-      },
-    ],
-  },
-  {
-    id: "france",
-    color: tokens("dark").blueAccent[300],
-    data: [
-      {
-        x: "plane",
-        y: 212,
-      },
-      {
-        x: "helicopter",
-        y: 190,
-      },
-      {
-        x: "boat",
-        y: 270,
-      },
-      {
-        x: "train",
-        y: 9,
-      },
-      {
-        x: "subway",
-        y: 75,
-      },
-      {
-        x: "bus",
-        y: 175,
-      },
-      {
-        x: "car",
-        y: 33,
-      },
-      {
-        x: "moto",
-        y: 189,
-      },
-      {
-        x: "bicycle",
-        y: 97,
-      },
-      {
-        x: "horse",
-        y: 87,
-      },
-      {
-        x: "skateboard",
-        y: 299,
-      },
-      {
-        x: "others",
-        y: 251,
-      },
-    ],
-  },
-  {
-    id: "us",
-    color: tokens("dark").redAccent[200],
-    data: [
-      {
-        x: "plane",
-        y: 191,
-      },
-      {
-        x: "helicopter",
-        y: 136,
-      },
-      {
-        x: "boat",
-        y: 91,
-      },
-      {
-        x: "train",
-        y: 190,
-      },
-      {
-        x: "subway",
-        y: 211,
-      },
-      {
-        x: "bus",
-        y: 152,
-      },
-      {
-        x: "car",
-        y: 189,
-      },
-      {
-        x: "moto",
-        y: 152,
-      },
-      {
-        x: "bicycle",
-        y: 8,
-      },
-      {
-        x: "horse",
-        y: 197,
-      },
-      {
-        x: "skateboard",
-        y: 107,
-      },
-      {
-        x: "others",
-        y: 170,
-      },
-    ],
-  },
-];
+export const generateMockLineData = (startDate, endDate, viewType) => {
+  const mockLineData = [
+    {
+      id: "4-seats",
+      color: tokens("dark").greenAccent[500],
+      data: [],
+    },
+    {
+      id: "7-seats",
+      color: tokens("dark").blueAccent[500],
+      data: [],
+    },
+  ];
+
+  if (!startDate || !endDate || !viewType)
+    return mockLineData
+
+  let currentDate = dayjs(startDate);
+  const endDateObj = dayjs(endDate);
+
+  while (currentDate <= endDateObj) {
+    let x;
+
+    if (viewType === 'month') {
+      x = currentDate.format('M-YYYY');
+      currentDate = currentDate.add(1, 'month');
+    } else if (viewType === 'week') {
+      const nextWeek = currentDate.add(1, 'week');
+      x = `${currentDate.format('YYYY-MM-DD')} - ${nextWeek.format('YYYY-MM-DD')}`;
+      currentDate = currentDate.add(1, 'week');
+    } else if (viewType === 'year') {
+      x = currentDate.format('YYYY');
+      currentDate = currentDate.add(1, 'year');
+    } else {
+      throw new Error('Invalid viewType');
+    }
+    let revenueMax = 1000;
+    switch (viewType) {
+      case 'month':
+        {
+          revenueMax = revenueMax + 4
+          break;
+        }
+      case 'year':
+        {
+          revenueMax = revenueMax * 4 * 12;
+          break
+        }
+      default:
+        break
+    }
+
+    const y = Math.floor(Math.random() * revenueMax); // Replace with your revenue calculation logic
+
+    mockLineData[0].data.push({ x, y });
+    mockLineData[1].data.push({ x, y: (y - (Math.random() > 0.5 ? Math.floor(Math.random() * revenueMax / 10) : Math.floor(Math.random() * revenueMax / 10) * (-1))) });
+  }
+
+  return mockLineData;
+};
 
 export const mockGeographyData = [
   {
