@@ -3,8 +3,10 @@ import { MapData, MapDataDetail, MapService } from './map-service.plugin';
 import { AxiosError } from 'axios';
 import { InternalServerErrorException } from '@nestjs/common';
 import { CustomUrlBuilder } from './url-builder';
+import { HttpService } from '@nestjs/axios';
+import { ConfigService } from '@nestjs/config';
 
-export class GoogleMapService extends MapService {
+export default class GoogleMapService extends MapService {
   host: string = 'maps.googleapis.com/maps/api';
 
   async geocoding(address: string): Promise<MapDataDetail[]> {

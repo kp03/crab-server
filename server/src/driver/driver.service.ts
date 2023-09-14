@@ -19,7 +19,6 @@ import { ImageService } from 'src/image/image.service';
 import { AcceptTripDto } from './dtos/driver.trip.update.dto';
 import { NotificationService } from 'src/notification/notification.service';
 import { SocketMessage, SocketService } from 'src/socket/socket.service';
-import { MediatorService } from 'src/mediator/mediator.service';
 import { CompletedTripDto } from './dtos/driver.complete.trip.dto';
 
 @Injectable()

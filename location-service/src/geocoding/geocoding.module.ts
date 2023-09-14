@@ -7,8 +7,8 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { UrlModule } from 'src/utils/url/url.module';
 import { redisStore } from 'cache-manager-redis-yet';
 import { MapService } from 'src/map-service-plugin/map-service.plugin';
-import { GoogleMapService } from 'src/map-service-plugin/google-map-service.plugin';
-import { GoongService } from 'src/map-service-plugin/goong-service.plugin';
+
+import { PlugInManager } from 'src/map-service-plugin/plugin-manager';
 
 @Module({
   imports: [
@@ -18,6 +18,7 @@ import { GoongService } from 'src/map-service-plugin/goong-service.plugin';
       isGlobal: true,
       imports: [ConfigModule],
       useFactory: async (configService: ConfigService) => ({
+        ttl: 30 * 60 * 1000,
         store: await redisStore({
           socket: {
             host: configService.get('REDIS_HOST'),
@@ -34,11 +35,15 @@ import { GoongService } from 'src/map-service-plugin/goong-service.plugin';
     {
       provide: 'MAP_SERVICE',
       inject: [HttpService, ConfigService],
-      useFactory: (
+      useFactory: async (
         httpService: HttpService,
         configService: ConfigService,
-      ): MapService => {
-        return new GoongService(httpService, configService);
+      ): Promise<MapService> => {
+        return await PlugInManager.createMapService(
+          configService.get('MAP_PLUGIN_PATH'),
+          httpService,
+          configService,
+        );
       },
     },
   ],

@@ -16,10 +16,6 @@ import {
   SocketMessage,
   SocketService,
 } from './socket.service';
-import {
-  MediatorListener,
-  MediatorService,
-} from 'src/mediator/mediator.service';
 import { DriverService } from 'src/driver/driver.service';
 
 @WebSocketGateway(8443, {

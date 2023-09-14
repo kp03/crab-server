@@ -10,7 +10,6 @@ import { ImageModule } from './image/image.module';
 import { NotificationModule } from './notification/notification.module';
 import { TripModule } from './trip/trip.module';
 import { SocketModule } from './socket/socket.module';
-import { MediatorModule } from './mediator/mediator.module';
 
 @Module({
   imports: [

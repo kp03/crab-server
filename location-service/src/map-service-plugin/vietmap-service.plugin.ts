@@ -4,8 +4,10 @@ import { AxiosError } from 'axios';
 import { InternalServerErrorException } from '@nestjs/common';
 import { CustomUrlBuilder } from './url-builder';
 
-export class VietMapService extends MapService {
+export default class VietMapService extends MapService {
   host: string = 'maps.vietmap.vn/api';
+
+ 
 
   async geocoding(address: string): Promise<MapDataDetail[]> {
     const geoUrl = new CustomUrlBuilder(this.host)

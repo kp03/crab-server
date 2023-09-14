@@ -6,7 +6,6 @@ import { AuthModule } from 'src/auth/auth.module';
 import { ImageModule } from 'src/image/image.module';
 import { NotificationModule } from 'src/notification/notification.module';
 import { SocketModule } from 'src/socket/socket.module';
-import { MediatorModule } from 'src/mediator/mediator.module';
 
 @Module({
   imports: [

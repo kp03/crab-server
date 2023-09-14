@@ -1,7 +1,7 @@
 import { HttpService } from '@nestjs/axios';
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { AxiosError } from 'axios';
-import { catchError, firstValueFrom } from 'rxjs';
+import { catchError, firstValueFrom, of } from 'rxjs';
 
 @Injectable()
 export class ImageService {
@@ -30,12 +30,20 @@ export class ImageService {
         )
         .pipe(
           catchError((error: AxiosError) => {
+            console.log('save image to cloud server error : ' + error);
+            return of({
+              data: null,
+            });
             throw new InternalServerErrorException(
               'save image to cloud server error : ' + error,
             );
           }),
         ),
     );
+
+    if (!imageData) {
+      return '';
+    }
 
     // return the url of image
     return imageData.data.url;

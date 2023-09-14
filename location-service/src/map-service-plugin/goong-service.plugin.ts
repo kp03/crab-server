@@ -4,8 +4,10 @@ import { AxiosError } from 'axios';
 import { InternalServerErrorException } from '@nestjs/common';
 import { CustomUrlBuilder } from './url-builder';
 
-export class GoongService extends MapService {
+export default class GoongService extends MapService {
   host: string = 'rsapi.goong.io';
+
+  
 
   async geocoding(address: string): Promise<MapDataDetail[]> {
     const geoUrl = new CustomUrlBuilder(this.host)
@@ -34,8 +36,8 @@ export class GoongService extends MapService {
         address: element.formatted_address,
         coordinates: {
           lat: element.geometry.location.lat,
-          long: element.geometry.location.lng
-        }
+          long: element.geometry.location.lng,
+        },
       };
 
       result.push(place);
@@ -62,7 +64,7 @@ export class GoongService extends MapService {
 
     const place = data.result;
 
-    const result: MapDataDetail = {
+    const result: MapDataDetail = { 
       place_id: placeId,
       address: place.formatted_address,
       coordinates: {
